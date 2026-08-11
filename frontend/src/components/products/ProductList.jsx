@@ -4,10 +4,11 @@ import { useSearchParams } from 'react-router-dom';
 import { fetchProducts, fetchCategories, setFilters } from '@/features/productsSlice.js';
 import ProductCard from '@/components/products/ProductCard.jsx';
 import HeroBanner from '@/components/landing/HeroBanner.jsx';
-import CategoryShowcase from '@/components/landing/CategoryShowcase.jsx';
 import TrustBadges from '@/components/landing/TrustBadges.jsx';
+import NewArrivalsGrid from '@/components/landing/NewArrivalsGrid.jsx';
+import CategoryShowcase from '@/components/landing/CategoryShowcase.jsx';
+import PromoBanner from '@/components/landing/PromoBanner.jsx';
 import Testimonials from '@/components/landing/Testimonials.jsx';
-import AboutPreview from '@/components/landing/AboutPreview.jsx';
 import Newsletter from '@/components/landing/Newsletter.jsx';
 import { SlidersHorizontal, ChevronDown, X, ArrowUpDown } from 'lucide-react';
 
@@ -135,33 +136,26 @@ export default function ProductList() {
       {/* Landing Page Sections - Only show when no filters */}
       {showLanding && (
         <>
+          {/* 1 ── Hero */}
           <HeroBanner onShopNow={scrollToProducts} />
+
+          {/* 2 ── Trust Badges */}
           <TrustBadges />
+
+          {/* 3 ── New Arrivals Grid (live products, newest-first, max 8) */}
+          <NewArrivalsGrid products={items} onBrowseAll={scrollToProducts} />
+
+          {/* 4 ── Shop by Category */}
           <CategoryShowcase />
+
+          {/* 5 ── Promotional Banner (Night Walk Collection) */}
+          <PromoBanner onShopNow={scrollToProducts} />
+
+          {/* 6 ── Happy Tails Reviews */}
           <Testimonials />
-          <AboutPreview />
+
+          {/* 7 ── Newsletter */}
           <Newsletter />
-          
-          {/* Collection CTA Section */}
-          <div className="py-20 bg-cream text-center border-t border-blush/30">
-            <div className="max-w-3xl mx-auto px-4">
-              <h2 className="text-3xl md:text-4xl font-bold font-serif text-plum mb-4">
-                Explore Our Complete Collection
-              </h2>
-              <p className="text-charcoal/70 font-sans text-lg mb-8">
-                Handpicked accessories for every pet personality
-              </p>
-              <button
-                onClick={scrollToProducts}
-                className="inline-flex items-center px-10 py-4 bg-plum hover:bg-plum/90 text-white font-sans font-bold text-lg rounded-full transition-all transform hover:scale-[1.02] active:scale-[0.97] shadow-xl shadow-plum/20"
-              >
-                Browse All Products
-                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
-          </div>
         </>
       )}
 

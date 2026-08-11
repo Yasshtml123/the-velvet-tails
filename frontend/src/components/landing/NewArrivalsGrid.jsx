@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Star, ShoppingCart, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { addToCart } from '@/features/cartSlice.js';
+import { fetchProducts } from '@/features/productsSlice.js';
 import { formatPrice } from '@/utils/formatters.js';
 import { optimizeCloudinaryUrl } from '@/utils/cloudinary.js';
 
-// Derive a stable mock rating from the product title length
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function getMockRating(title = '') {
   return (4.0 + (title.length % 10) / 10).toFixed(1);
 }
@@ -14,7 +15,29 @@ function getMockReviewCount(title = '') {
   return 10 + (title.length % 50);
 }
 
-// Single mini-card inside the grid
+// ─── Skeleton placeholder card ────────────────────────────────────────────────
+function SkeletonCard() {
+  return (
+    <div className="flex-shrink-0 w-52 sm:w-56 md:w-60">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+        <div className="aspect-square bg-blush/40 animate-pulse" />
+        <div className="p-3.5 space-y-2.5">
+          <div className="w-16 h-2.5 bg-blush rounded-full animate-pulse" />
+          <div className="w-full h-4 bg-blush/70 rounded animate-pulse" />
+          <div className="w-3/4 h-4 bg-blush/50 rounded animate-pulse" />
+          <div className="flex gap-0.5 mt-1">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="w-3 h-3 bg-blush/40 rounded animate-pulse" />
+            ))}
+          </div>
+          <div className="w-16 h-5 bg-blush rounded animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Single product card ───────────────────────────────────────────────────────
 function NewArrivalCard({ product }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -54,7 +77,7 @@ function NewArrivalCard({ product }) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className="bg-white rounded-2xl overflow-hidden transition-all duration-400 ease-out"
+        className="bg-white rounded-2xl overflow-hidden transition-all duration-300 ease-out"
         style={{
           boxShadow: isHovered
             ? '0 20px 40px -8px rgba(92,57,117,0.28), 0 0 0 2px rgba(203,178,106,0.35)'
@@ -62,21 +85,21 @@ function NewArrivalCard({ product }) {
           transform: isHovered ? 'translateY(-6px)' : 'translateY(0)',
         }}
       >
-        {/* Image */}
+        {/* ── Image area ── */}
         <Link to={`/products/${product._id}`} className="block relative overflow-hidden">
-          <div className="aspect-square bg-cream">
+          <div className="aspect-square bg-cream relative">
+            {/* Spinner while image fetches */}
             {!imageLoaded && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-8 h-8 border-2 border-plum/20 border-t-plum rounded-full animate-spin" />
               </div>
             )}
+
             {imgSrc ? (
               <img
                 src={imgSrc}
                 alt={product.title}
-                className={`w-full h-full object-cover transition-transform duration-600 ease-out ${
-                  isHovered ? 'scale-108' : 'scale-100'
-                } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className={`w-full h-full object-cover transition-all duration-500 ease-out ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                 style={{ transform: isHovered ? 'scale(1.08)' : 'scale(1)' }}
                 loading="lazy"
                 onLoad={() => setImageLoaded(true)}
@@ -92,14 +115,14 @@ function NewArrivalCard({ product }) {
 
             {/* Discount badge */}
             {discountPct > 0 && (
-              <div className="absolute top-2.5 left-2.5 bg-sage text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+              <div className="absolute top-2.5 left-2.5 z-10 bg-sage text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                 -{discountPct}%
               </div>
             )}
 
             {/* Out of stock overlay */}
             {product.inventory === 0 && (
-              <div className="absolute inset-0 bg-charcoal/50 backdrop-blur-[2px] flex items-center justify-center">
+              <div className="absolute inset-0 bg-charcoal/50 backdrop-blur-[2px] flex items-center justify-center z-10">
                 <span className="bg-white/90 text-charcoal font-bold text-xs px-3 py-1.5 rounded-lg shadow">
                   Out of Stock
                 </span>
@@ -109,31 +132,31 @@ function NewArrivalCard({ product }) {
             {/* Quick Add — slides up on hover */}
             {product.inventory > 0 && (
               <div
-                className={`absolute bottom-0 left-0 right-0 p-2.5 transition-all duration-300 ${
+                className={`absolute bottom-0 left-0 right-0 p-2.5 z-10 transition-all duration-300 ${
                   isHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
                 }`}
               >
                 <button
                   onClick={handleQuickAdd}
                   className={`w-full py-2.5 font-sans font-semibold text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 ${
-                    addedFlash
-                      ? 'bg-sage text-white'
-                      : 'bg-plum hover:bg-plum/90 text-white'
+                    addedFlash ? 'bg-sage text-white' : 'bg-plum hover:bg-plum/90 text-white'
                   }`}
                 >
                   <ShoppingCart className="w-3.5 h-3.5" />
-                  {addedFlash ? 'Added!' : 'Quick Add'}
+                  {addedFlash ? '✓ Added!' : 'Quick Add'}
                 </button>
               </div>
             )}
           </div>
         </Link>
 
-        {/* Info */}
+        {/* ── Info area ── */}
         <div className="p-3.5">
           {/* Category pill */}
-          <span className="inline-block px-2 py-0.5 bg-plum/8 text-plum text-[10px] font-semibold rounded-full mb-1.5"
-            style={{ background: 'rgba(92,57,117,0.08)' }}>
+          <span
+            className="inline-block px-2 py-0.5 text-plum text-[10px] font-semibold rounded-full mb-1.5"
+            style={{ background: 'rgba(92,57,117,0.08)' }}
+          >
             {product.category}
           </span>
 
@@ -149,7 +172,9 @@ function NewArrivalCard({ product }) {
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                className={`w-3 h-3 ${i < Math.round(parseFloat(rating)) ? 'text-gold fill-gold' : 'text-gray-200'}`}
+                className={`w-3 h-3 ${
+                  i < Math.round(parseFloat(rating)) ? 'text-gold fill-gold' : 'text-gray-200'
+                }`}
               />
             ))}
             <span className="text-[10px] font-sans text-charcoal/50 ml-0.5">({reviewCount})</span>
@@ -172,56 +197,34 @@ function NewArrivalCard({ product }) {
   );
 }
 
-// ─── Main New Arrivals section ────────────────────────────────────────────────
-export default function NewArrivalsGrid({ products = [], onBrowseAll }) {
+// ─── Main exported section ─────────────────────────────────────────────────────
+// Self-contained: reads from Redux directly so it never depends on prop-passing
+// timing. Dispatches its own fetch on mount so products are always loaded.
+export default function NewArrivalsGrid({ onBrowseAll }) {
+  const dispatch = useDispatch();
+  const { items, isLoading } = useSelector((s) => s.products);
   const [scrollIndex, setScrollIndex] = useState(0);
 
-  // Show up to 8 newest items; fall back to first 8 by index
-  const newArrivals = [...products]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  // Fetch products on mount if the store is empty (e.g. cold load)
+  useEffect(() => {
+    if (items.length === 0) {
+      dispatch(fetchProducts({}));
+    }
+  }, [dispatch, items.length]);
+
+  // Take up to 8, newest first (fall back to store order if no createdAt)
+  const newArrivals = [...items]
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     .slice(0, 8);
 
-  // While products are still loading, show skeleton cards so the section
-  // always occupies its slot in the layout (never disappears from the page).
-  if (newArrivals.length === 0) {
-    return (
-      <section className="py-14 lg:py-20 bg-cream">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header skeleton */}
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <div className="w-16 h-3 bg-blush rounded-full animate-pulse mb-3" />
-              <div className="w-40 h-8 bg-blush rounded-xl animate-pulse mb-2" />
-              <div className="w-52 h-3 bg-blush/60 rounded-full animate-pulse" />
-            </div>
-          </div>
-          {/* Skeleton cards row */}
-          <div className="flex gap-4 overflow-hidden">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex-shrink-0 w-52 sm:w-56 md:w-60">
-                <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-                  <div className="aspect-square bg-blush/40 animate-pulse" />
-                  <div className="p-3.5 space-y-2">
-                    <div className="w-16 h-3 bg-blush rounded-full animate-pulse" />
-                    <div className="w-full h-4 bg-blush/70 rounded animate-pulse" />
-                    <div className="w-3/4 h-4 bg-blush/50 rounded animate-pulse" />
-                    <div className="w-20 h-3 bg-blush/40 rounded-full animate-pulse" />
-                    <div className="w-16 h-5 bg-blush rounded animate-pulse" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const showSkeleton = isLoading || newArrivals.length === 0;
 
   const canPrev = scrollIndex > 0;
   const canNext = scrollIndex < newArrivals.length - 1;
 
   const handlePrev = () => setScrollIndex((i) => Math.max(0, i - 2));
-  const handleNext = () => setScrollIndex((i) => Math.min(newArrivals.length - 1, i + 2));
+  const handleNext = () =>
+    setScrollIndex((i) => Math.min(newArrivals.length - 1, i + 2));
 
   return (
     <section className="py-14 lg:py-20 bg-cream">
@@ -230,7 +233,6 @@ export default function NewArrivalsGrid({ products = [], onBrowseAll }) {
         {/* ── Section header ── */}
         <div className="flex items-end justify-between mb-8">
           <div>
-            {/* Eyebrow */}
             <p className="font-sans text-xs font-bold text-gold uppercase tracking-[0.22em] mb-2">
               ✦ Fresh In
             </p>
@@ -242,71 +244,83 @@ export default function NewArrivalsGrid({ products = [], onBrowseAll }) {
             </p>
           </div>
 
-          {/* Desktop: View All link + nav arrows */}
-          <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={handlePrev}
-              disabled={!canPrev}
-              aria-label="Scroll left"
-              className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-200 ${
-                canPrev
-                  ? 'border-plum/30 text-plum hover:bg-plum hover:text-white hover:border-plum'
-                  : 'border-blush text-charcoal/20 cursor-not-allowed'
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={!canNext}
-              aria-label="Scroll right"
-              className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-200 ${
-                canNext
-                  ? 'border-plum/30 text-plum hover:bg-plum hover:text-white hover:border-plum'
-                  : 'border-blush text-charcoal/20 cursor-not-allowed'
-              }`}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+          {/* Desktop nav arrows + View All */}
+          {!showSkeleton && (
+            <div className="hidden md:flex items-center gap-3">
+              <button
+                onClick={handlePrev}
+                disabled={!canPrev}
+                aria-label="Scroll left"
+                className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-200 ${
+                  canPrev
+                    ? 'border-plum/30 text-plum hover:bg-plum hover:text-white hover:border-plum'
+                    : 'border-blush text-charcoal/20 cursor-not-allowed'
+                }`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={!canNext}
+                aria-label="Scroll right"
+                className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-200 ${
+                  canNext
+                    ? 'border-plum/30 text-plum hover:bg-plum hover:text-white hover:border-plum'
+                    : 'border-blush text-charcoal/20 cursor-not-allowed'
+                }`}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
 
-            <button
-              onClick={onBrowseAll}
-              className="inline-flex items-center gap-1.5 text-sm font-sans font-semibold text-plum hover:text-gold transition-colors duration-200 ml-2"
-            >
-              View All
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+              <button
+                onClick={onBrowseAll}
+                className="inline-flex items-center gap-1.5 text-sm font-sans font-semibold text-plum hover:text-gold transition-colors duration-200 ml-2"
+              >
+                View All
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* ── Cards row — horizontally scrollable on mobile ── */}
+        {/* ── Cards row ── */}
         <div className="overflow-hidden">
-          <div
-            className="flex gap-4 transition-transform duration-500 ease-out"
-            style={{
-              transform: `translateX(calc(-${scrollIndex} * (${
-                typeof window !== 'undefined' && window.innerWidth < 640 ? '224px' : '248px'
-              } + 16px)))`,
-            }}
-          >
-            {newArrivals.map((product) => (
-              <NewArrivalCard key={product._id} product={product} />
-            ))}
-          </div>
+          {showSkeleton ? (
+            /* Loading skeleton */
+            <div className="flex gap-4">
+              {[...Array(4)].map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : (
+            /* Real product cards */
+            <div
+              className="flex gap-4 transition-transform duration-500 ease-out"
+              style={{
+                transform: `translateX(calc(-${scrollIndex} * (248px + 16px)))`,
+              }}
+            >
+              {newArrivals.map((product) => (
+                <NewArrivalCard key={product._id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── Mobile: View All CTA ── */}
-        <div className="mt-8 text-center md:hidden">
-          <button
-            onClick={onBrowseAll}
-            className="inline-flex items-center gap-2 px-7 py-3 bg-plum hover:bg-plum/90 text-white font-sans font-bold text-sm rounded-full transition-all active:scale-95 shadow-lg shadow-plum/20"
-          >
-            View All Products
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
+        {!showSkeleton && (
+          <div className="mt-8 text-center md:hidden">
+            <button
+              onClick={onBrowseAll}
+              className="inline-flex items-center gap-2 px-7 py-3 bg-plum hover:bg-plum/90 text-white font-sans font-bold text-sm rounded-full transition-all active:scale-95 shadow-lg shadow-plum/20"
+            >
+              View All Products
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
-        {/* ── Gold divider ── */}
+        {/* ── Divider ── */}
         <div className="mt-12 flex items-center gap-3">
           <div className="flex-1 h-px bg-blush/60" />
           <div className="w-1.5 h-1.5 rounded-full bg-gold" />

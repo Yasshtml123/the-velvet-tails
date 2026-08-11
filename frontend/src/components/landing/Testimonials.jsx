@@ -1,36 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Star, Quote, Pencil, Trash2, X, Send } from 'lucide-react';
 
-// ─── Seed reviews (static, non-deletable) ─────────────────────────────────────
-const SEED_REVIEWS = [
-  {
-    id: 'seed-1',
-    name: 'Sarah Jenkins',
-    pet: 'Luna (Golden Retriever)',
-    initials: 'SJ',
-    text: "The velvet collar is absolutely stunning! Luna looks so elegant, and the quality is unmatched. I've already ordered the matching leash.",
-    rating: 5,
-    isUserSubmitted: false,
-  },
-  {
-    id: 'seed-2',
-    name: 'Michael Chen',
-    pet: 'Milo (Persian Cat)',
-    initials: 'MC',
-    text: 'Finally found a breakaway collar that actually looks luxurious. Milo seems very comfortable wearing it all day.',
-    rating: 5,
-    isUserSubmitted: false,
-  },
-  {
-    id: 'seed-3',
-    name: 'Emma Watson',
-    pet: 'Bella (French Bulldog)',
-    initials: 'EW',
-    text: 'The night walk set gives me such peace of mind. Not only is it highly visible, but it also maintains that premium feel.',
-    rating: 4,
-    isUserSubmitted: false,
-  },
-];
+// ─── Seed reviews — starts empty, ready for real customer reviews ────────────
+const SEED_REVIEWS = [];
 
 // ─── Helper: derive initials from a name string ───────────────────────────────
 function getInitials(name) {
@@ -168,13 +140,13 @@ export default function Testimonials() {
             Don't just take our word for it. See what our furry friends and their humans have to say.
           </p>
 
-          {/* Write a Review button */}
+          {/* Write a Review button — prominent solid CTA */}
           <button
             id="write-review-btn"
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-white/15 hover:bg-white/25 border border-white/30 hover:border-white/50 text-white font-sans font-semibold text-sm rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] shadow-lg"
+            className="inline-flex items-center gap-2.5 px-8 py-4 bg-gold hover:bg-[#b89d5a] text-plum font-sans font-bold text-base rounded-full transition-all duration-200 hover:scale-[1.04] active:scale-[0.97] shadow-xl shadow-gold/30 focus:outline-none focus:ring-4 focus:ring-gold/40"
           >
-            <Pencil className="w-4 h-4" />
+            <Pencil className="w-5 h-5" />
             Write a Review
           </button>
         </div>

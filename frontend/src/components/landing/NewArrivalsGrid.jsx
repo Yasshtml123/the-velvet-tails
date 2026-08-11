@@ -181,7 +181,41 @@ export default function NewArrivalsGrid({ products = [], onBrowseAll }) {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 8);
 
-  if (newArrivals.length === 0) return null;
+  // While products are still loading, show skeleton cards so the section
+  // always occupies its slot in the layout (never disappears from the page).
+  if (newArrivals.length === 0) {
+    return (
+      <section className="py-14 lg:py-20 bg-cream">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header skeleton */}
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <div className="w-16 h-3 bg-blush rounded-full animate-pulse mb-3" />
+              <div className="w-40 h-8 bg-blush rounded-xl animate-pulse mb-2" />
+              <div className="w-52 h-3 bg-blush/60 rounded-full animate-pulse" />
+            </div>
+          </div>
+          {/* Skeleton cards row */}
+          <div className="flex gap-4 overflow-hidden">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex-shrink-0 w-52 sm:w-56 md:w-60">
+                <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                  <div className="aspect-square bg-blush/40 animate-pulse" />
+                  <div className="p-3.5 space-y-2">
+                    <div className="w-16 h-3 bg-blush rounded-full animate-pulse" />
+                    <div className="w-full h-4 bg-blush/70 rounded animate-pulse" />
+                    <div className="w-3/4 h-4 bg-blush/50 rounded animate-pulse" />
+                    <div className="w-20 h-3 bg-blush/40 rounded-full animate-pulse" />
+                    <div className="w-16 h-5 bg-blush rounded animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const canPrev = scrollIndex > 0;
   const canNext = scrollIndex < newArrivals.length - 1;

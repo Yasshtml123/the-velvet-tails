@@ -142,8 +142,12 @@ export default function ProductList() {
           {/* 2 ── Trust Badges */}
           <TrustBadges />
 
-          {/* 3 ── New Arrivals Grid (self-contained, reads from Redux) */}
-          <NewArrivalsGrid onBrowseAll={scrollToProducts} />
+          {/* 3 ── New Arrivals Grid — receives products directly from parent's Redux fetch */}
+          <NewArrivalsGrid
+            products={items}
+            isLoading={isLoading}
+            onBrowseAll={scrollToProducts}
+          />
 
 
           {/* 4 ── Shop by Category */}

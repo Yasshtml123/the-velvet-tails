@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Star, ShoppingCart, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { addToCart } from '@/features/cartSlice.js';
-import { fetchProducts } from '@/features/productsSlice.js';
 import { formatPrice } from '@/utils/formatters.js';
 import { optimizeCloudinaryUrl } from '@/utils/cloudinary.js';
 
@@ -198,25 +197,18 @@ function NewArrivalCard({ product }) {
 }
 
 // ─── Main exported section ─────────────────────────────────────────────────────
-// Self-contained: reads from Redux directly so it never depends on prop-passing
-// timing. Dispatches its own fetch on mount so products are always loaded.
-export default function NewArrivalsGrid({ onBrowseAll }) {
-  const dispatch = useDispatch();
-  const { items, isLoading } = useSelector((s) => s.products);
+// Receives products and isLoading directly from the parent (ProductList) which
+// owns the single fetchProducts call. No internal dispatch — eliminates the
+// double-fetch race that kept the skeleton permanently visible.
+export default function NewArrivalsGrid({ products = [], isLoading = false, onBrowseAll }) {
   const [scrollIndex, setScrollIndex] = useState(0);
 
-  // Fetch products on mount if the store is empty (e.g. cold load)
-  useEffect(() => {
-    if (items.length === 0) {
-      dispatch(fetchProducts({}));
-    }
-  }, [dispatch, items.length]);
-
-  // Take up to 8, newest first (fall back to store order if no createdAt)
-  const newArrivals = [...items]
+  // Take up to 8, newest first
+  const newArrivals = [...products]
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     .slice(0, 8);
 
+  // Show skeleton while the parent is fetching OR before data arrives
   const showSkeleton = isLoading || newArrivals.length === 0;
 
   const canPrev = scrollIndex > 0;

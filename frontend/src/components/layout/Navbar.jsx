@@ -7,19 +7,97 @@ import { fetchRefundCount } from '@/features/refundsSlice.js';
 import { fetchOrderCount } from '@/features/adminOrdersSlice.js';
 import { fetchReturnsCount } from '@/features/returnsSlice.js';
 
+// Each link is { label, href } where href uses real DB category values.
+// Sub-categories use ?search= to narrow within a parent category.
+const CAT = encodeURIComponent('Collars & Harnesses');
+const LEA = encodeURIComponent('Leashes & Leads');
+const NW  = encodeURIComponent('Night Walk');
+const PLY = encodeURIComponent('Playtime');
+const ACC = encodeURIComponent('Accessories');
+const CCAT = encodeURIComponent('Cat Collars');
+const CTOY = encodeURIComponent('Cat Toys');
+const CACC = encodeURIComponent('Cat Accessories');
+
 const categoryData = {
   Dog: [
-    { name: 'Collars & Harnesses', links: ['Velvet Collars', 'Leather Collars', 'Reflective Collars', 'Harness Sets'] },
-    { name: 'Leashes & Leads', links: ['Leather Leashes', 'Rope Leashes', 'Retractable Leashes', 'Training Leashes'] },
-    { name: 'Night Walk', links: ['LED Collars', 'LED Leashes', 'Glow Accessories', 'Night Walk Sets'] },
-    { name: 'Playtime', links: ['Tug Toys', 'Chew Toys', 'Fetch Toys', 'Interactive Toys'] },
-    { name: 'Accessories', links: ['Bandanas & Bow Ties', 'Tags & Charms', 'Poop Bags', 'Travel Bowls'] }
+    {
+      name: 'Collars & Harnesses',
+      links: [
+        { label: 'All Collars & Harnesses', href: `/products?category=${CAT}` },
+        { label: 'Velvet Fur Collars',      href: `/products?category=${CAT}&search=VelvetFur` },
+        { label: 'Reflective Collars',      href: `/products?category=${CAT}&search=SafeGlow` },
+        { label: 'Harness Sets',            href: `/products?category=${CAT}&search=Harness` },
+        { label: 'Puppy Walk Sets',         href: `/products?category=${CAT}&search=Pup` },
+        { label: 'Tactical Collars',        href: `/products?category=${CAT}&search=Tactical` },
+        { label: 'Dapper Bow Collars',      href: `/products?category=${CAT}&search=Dapper` },
+        { label: 'Everyday Comfort',        href: `/products?category=${CAT}&search=Everyday` },
+      ]
+    },
+    {
+      name: 'Leashes & Leads',
+      links: [
+        { label: 'All Leashes & Leads',     href: `/products?category=${LEA}` },
+        { label: 'Padded Grip Leashes',     href: `/products?category=${LEA}&search=VelvetGrip` },
+        { label: 'Orange Leashes',          href: `/products?category=${LEA}&search=Orange` },
+        { label: 'Brown Leashes',           href: `/products?category=${LEA}&search=Brown` },
+        { label: 'Black Leashes',           href: `/products?category=${LEA}&search=Black` },
+      ]
+    },
+    {
+      name: 'Night Walk',
+      links: [
+        { label: 'All Night Walk',          href: `/products?category=${NW}` },
+        { label: 'Night Walk Sets',         href: `/products?category=${NW}&search=VelvetGlow` },
+        { label: 'Black Night Walk',        href: `/products?category=${NW}&search=Black` },
+        { label: 'Brown Night Walk',        href: `/products?category=${NW}&search=Brown` },
+        { label: 'Orange Night Walk',       href: `/products?category=${NW}&search=Orange` },
+      ]
+    },
+    {
+      name: 'Playtime',
+      links: [
+        { label: 'All Playtime',            href: `/products?category=${PLY}` },
+        { label: 'Chew Toys',               href: `/products?category=${PLY}&search=Chew` },
+        { label: 'Rope & Tug Toys',         href: `/products?category=${PLY}&search=Tug` },
+        { label: 'Fetch & Ball Toys',       href: `/products?category=${PLY}&search=Ball` },
+        { label: 'Natural Jute Toys',       href: `/products?category=${PLY}&search=Play` },
+        { label: 'Toy Bundles',             href: `/products?category=${PLY}&search=Bundle` },
+      ]
+    },
+    {
+      name: 'Accessories',
+      links: [
+        { label: 'All Accessories',         href: `/products?category=${ACC}` },
+        { label: 'Bow Ties',                href: `/products?category=${ACC}&search=Bow` },
+      ]
+    },
   ],
   Cat: [
-    { name: 'Collars & Harnesses', links: ['Breakaway Collars', 'Velvet Collars', 'Escape-Proof Harness', 'Kitten Collars'] },
-    { name: 'Leashes & Leads', links: ['Cat Leashes', 'Walking Harnesses', 'Retractable Leads'] },
-    { name: 'Playtime', links: ['Feather Wands', 'Laser Toys', 'Catnip Toys', 'Interactive Puzzles'] },
-    { name: 'Accessories', links: ['Cat Bow Ties', 'Bell Collars', 'Grooming Brushes', 'Cat Beds'] }
+    {
+      name: 'Collars & Harnesses',
+      links: [
+        { label: 'All Cat Collars',         href: `/products?category=${CCAT}` },
+        { label: 'Breakaway Collars',       href: `/products?category=${CCAT}&search=Breakaway` },
+        { label: 'Harness Sets',            href: `/products?category=${CCAT}&search=Harness` },
+      ]
+    },
+    {
+      name: 'Playtime',
+      links: [
+        { label: 'All Cat Toys',            href: `/products?category=${CTOY}` },
+        { label: 'Feather Wands',           href: `/products?category=${CTOY}&search=Feather` },
+        { label: 'Crinkle & Ball Toys',     href: `/products?category=${CTOY}&search=Ball` },
+        { label: 'Catnip Toys',             href: `/products?category=${CTOY}&search=Catnip` },
+      ]
+    },
+    {
+      name: 'Accessories',
+      links: [
+        { label: 'All Cat Accessories',     href: `/products?category=${CACC}` },
+        { label: 'Cat Beds',                href: `/products?category=${CACC}&search=Bed` },
+        { label: 'Cat Posts',               href: `/products?category=${CACC}&search=Post` },
+      ]
+    },
   ]
 };
 
@@ -147,9 +225,9 @@ export default function Navbar() {
                       </h4>
                       <ul className="space-y-2">
                         {col.links.map(link => (
-                          <li key={link}>
-                            <Link to={`/products?category=${encodeURIComponent(link)}`} className="text-sm text-charcoal/70 hover:text-plum transition-colors font-sans block">
-                              {link}
+                          <li key={link.label}>
+                            <Link to={link.href} className="text-sm text-charcoal/70 hover:text-plum transition-colors font-sans block">
+                              {link.label}
                             </Link>
                           </li>
                         ))}
@@ -372,12 +450,12 @@ export default function Navbar() {
                         <div className="flex flex-col space-y-2 pl-2">
                           {col.links.map(link => (
                             <Link 
-                              key={link} 
-                              to={`/products?category=${encodeURIComponent(link)}`}
+                              key={link.label} 
+                              to={link.href}
                               onClick={() => setMobileMenuOpen(false)}
                               className="text-sm font-sans text-charcoal/80"
                             >
-                              {link}
+                              {link.label}
                             </Link>
                           ))}
                         </div>
@@ -409,12 +487,12 @@ export default function Navbar() {
                         <div className="flex flex-col space-y-2 pl-2">
                           {col.links.map(link => (
                             <Link 
-                              key={link} 
-                              to={`/products?category=${encodeURIComponent(link)}`}
+                              key={link.label} 
+                              to={link.href}
                               onClick={() => setMobileMenuOpen(false)}
                               className="text-sm font-sans text-charcoal/80"
                             >
-                              {link}
+                              {link.label}
                             </Link>
                           ))}
                         </div>

@@ -3720,17 +3720,24 @@ export const CATEGORIES = [...new Set(PRODUCTS.map(p => p.category))];
 
 export function filterProducts({ category, search } = {}) {
   let result = PRODUCTS;
-  if (category) result = result.filter(p => p.category === category);
+
+  // Category filter — exact match on the category field
+  if (category) {
+    result = result.filter(p => p.category === category);
+  }
+
+  // Keyword/search filter — checks title first, then description, then tags
   if (search && search.trim()) {
     const q = search.trim().toLowerCase();
-    result = result.filter(p => 
-      p.title.toLowerCase().includes(q) || 
-      p.description.toLowerCase().includes(q) || 
+    result = result.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
       (p.tags || []).some(t => t.toLowerCase().includes(q))
     );
   }
-  // Sort newer products first for NewArrivals
-  return [...result].reverse();
+
+  // Return a shallow copy so callers can sort/reverse without mutating the source
+  return [...result];
 }
 
 export function findProduct(idOrSlug) {

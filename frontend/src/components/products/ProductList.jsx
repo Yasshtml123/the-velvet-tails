@@ -42,14 +42,18 @@ export default function ProductList() {
   const [selectedPriceRange, setSelectedPriceRange] = useState(null); // index into PRICE_RANGES or null
   const [showFilters, setShowFilters] = useState(false);
 
-  // Read category from URL params on mount and when URL changes
+  // Read category AND search from URL params whenever the URL changes
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category');
-    if (categoryFromUrl) {
-      dispatch(setFilters({ category: categoryFromUrl }));
+    const searchFromUrl   = searchParams.get('search');
+    if (categoryFromUrl || searchFromUrl) {
+      dispatch(setFilters({
+        category: categoryFromUrl || null,
+        search:   searchFromUrl   || null,
+      }));
       setShowLanding(false);
     } else {
-      // No category in URL - reset to landing page
+      // No filters in URL - reset to landing page
       dispatch(setFilters({ category: null, search: null }));
       setShowLanding(true);
     }

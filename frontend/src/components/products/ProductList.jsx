@@ -219,10 +219,11 @@ export default function ProductList() {
       {!showLanding && (
         <div id="products-page" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
           
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
             
             {/* ── Left Sidebar ── */}
-            <div className="w-full lg:w-64 shrink-0 bg-white border border-blush/60 rounded-2xl p-6 shadow-sm sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto">
+            <div className="hidden lg:block">
+            <div className="bg-white border border-blush/60 rounded-2xl p-6 shadow-sm sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-serif font-bold text-lg text-plum">Filters</h2>
                 <button onClick={handleClearAllFilters} className="text-xs font-sans font-semibold text-charcoal/50 hover:text-plum transition-colors underline underline-offset-2">
@@ -385,9 +386,9 @@ export default function ProductList() {
                 Apply Filters
               </button>
             </div>
-
-            {/* ── Main Content ── */}
-            <div className="flex-1 min-w-0">
+            </div>
+            {/* ── Main content ── */}
+            <div className="min-w-0">
               
               {/* Header & Top Bar */}
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">

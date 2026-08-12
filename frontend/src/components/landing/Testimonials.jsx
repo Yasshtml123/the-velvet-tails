@@ -137,7 +137,7 @@ export default function Testimonials() {
           <h2 className="text-3xl md:text-4xl font-bold font-serif text-white mb-4">
             What Pet Parents Say
           </h2>
-          <p className="text-cream/80 font-sans text-lg max-w-2xl mx-auto mb-7">
+          <p className="text-white drop-shadow-md font-sans text-lg max-w-2xl mx-auto mb-7">
             Don't just take our word for it. See what our furry friends and their humans have to say.
           </p>
 
@@ -155,8 +155,8 @@ export default function Testimonials() {
         {/* ── Review cards grid ── */}
         {reviews.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-white/60 font-sans text-base mb-2">No reviews yet — be the first!</p>
-            <p className="text-cream/50 font-sans text-sm">Click "Write a Review" above to share your experience.</p>
+            <p className="text-white drop-shadow-md font-sans text-base mb-2">No reviews yet — be the first!</p>
+            <p className="text-white/90 drop-shadow-md font-sans text-sm">Click "Write a Review" above to share your experience.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

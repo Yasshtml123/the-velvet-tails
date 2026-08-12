@@ -236,7 +236,7 @@ import ConfirmModal from '@/components/common/ConfirmModal.jsx';
 import { Heart, Star } from 'lucide-react';
 
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, viewMode = 'grid' }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
@@ -304,7 +304,9 @@ export default function ProductCard({ product }) {
   return (
     <>
       <div
-        className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 ease-out"
+        className={`group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 ease-out ${
+          viewMode === 'list' ? 'flex flex-row items-stretch' : 'flex flex-col'
+        }`}
         style={{
           boxShadow: isHovered
             ? '0 25px 50px -12px rgba(107, 51, 129, 0.35), 0 0 30px rgba(203, 178, 106, 0.2), 0 0 0 2px rgba(203, 178, 106, 0.4)'
@@ -339,7 +341,10 @@ export default function ProductCard({ product }) {
 
 
         {/* Product Image */}
-        <Link to={`/products/${product._id}`} className="block relative overflow-hidden">
+        <Link 
+          to={`/products/${product._id}`} 
+          className={`block relative overflow-hidden ${viewMode === 'list' ? 'w-1/3 shrink-0 border-r border-blush/30' : 'w-full'}`}
+        >
           <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-50 overflow-hidden">
             {!imageLoaded && (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -390,7 +395,7 @@ export default function ProductCard({ product }) {
         </Link>
 
         {/* Product Info */}
-        <div className="p-4">
+        <div className={`p-4 flex flex-col justify-between ${viewMode === 'list' ? 'w-2/3 sm:p-6' : 'w-full'}`}>
           <div className="mb-2">
             <span className="inline-block px-2.5 py-1 bg-velvet-purple/10 text-velvet-purple text-xs font-medium rounded-full">
               {product.category}
@@ -398,10 +403,16 @@ export default function ProductCard({ product }) {
           </div>
 
           <Link to={`/products/${product._id}`} className="block group/title">
-            <h3 className="text-base font-semibold text-charcoal line-clamp-2 mb-1 group-hover/title:text-plum transition-colors duration-200 leading-snug font-sans">
+            <h3 className={`font-semibold text-charcoal mb-1 group-hover/title:text-plum transition-colors duration-200 leading-snug font-sans ${viewMode === 'list' ? 'text-lg line-clamp-2' : 'text-base line-clamp-2'}`}>
               {product.title}
             </h3>
           </Link>
+
+          {viewMode === 'list' && (
+            <p className="text-sm text-charcoal/60 font-sans line-clamp-2 mb-3 mt-1">
+              {product.description}
+            </p>
+          )}
 
           {/* Ratings */}
           <div className="flex items-center gap-1 mb-2">

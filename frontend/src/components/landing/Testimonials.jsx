@@ -2,35 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Star, Quote, Pencil, Trash2, X, Send } from 'lucide-react';
 
 // ─── Seed reviews — production-ready cards visible on first load ──────────────
-const SEED_REVIEWS = [
-  {
-    id: 'seed-1',
-    name: 'Sarah Jenkins',
-    pet: 'Bella (Labrador, 3 yrs)',
-    initials: 'SJ',
-    rating: 5,
-    text: 'The velvet harness is an absolute dream — beautifully crafted and Bella wears it like royalty. The gold hardware details are stunning in person. We get compliments on every walk!',
-    isUserSubmitted: false,
-  },
-  {
-    id: 'seed-2',
-    name: 'Michael Chen',
-    pet: 'Mochi (Shiba Inu, 2 yrs)',
-    initials: 'MC',
-    rating: 5,
-    text: "Finally a pet brand that cares about aesthetics as much as functionality. Mochi's new collar fits perfectly and the quality is on par with luxury human accessories. Worth every penny.",
-    isUserSubmitted: false,
-  },
-  {
-    id: 'seed-3',
-    name: 'Emma Watson',
-    pet: 'Duchess (Persian Cat, 5 yrs)',
-    initials: 'EW',
-    rating: 5,
-    text: 'I ordered the plum velvet collar for Duchess and she looks absolutely regal. The sizing guide was spot-on and delivery was faster than expected. The Velvet Tails is now our only pet accessory brand.',
-    isUserSubmitted: false,
-  },
-];
+const SEED_REVIEWS = [];
+
 
 // ─── Helper: derive initials from a name string ───────────────────────────────
 function getInitials(name) {

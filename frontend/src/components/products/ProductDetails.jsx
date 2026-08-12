@@ -9,7 +9,7 @@ import { formatPrice } from '@/utils/formatters.js';
 import { 
     Star, Heart, Share2, ShieldCheck, Truck, RefreshCcw, 
     CheckCircle, ChevronDown, ChevronUp, ThumbsUp, Check, 
-    MessageCircle, Link2, ShoppingBag 
+    MessageCircle, Link2, ShoppingBag, X 
 } from 'lucide-react';
 
 export default function ProductDetails() {
@@ -22,6 +22,10 @@ export default function ProductDetails() {
     
     // Accordion states
     const [openAccordion, setOpenAccordion] = useState('description');
+
+    // Review Modal states
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviewForm, setReviewForm] = useState({ name: '', text: '', rating: 5 });
 
     const currentProduct = findProduct(id);
 
@@ -88,19 +92,39 @@ export default function ProductDetails() {
 
     const descriptionPoints = currentProduct.description?.split('. ').filter(Boolean) || [];
 
-    const reviews = [
-        { id: 1, author: "Jessica M.", avatar: "J", date: "August 10, 2026", rating: 5, verified: true, text: "Absolutely beautiful and fits perfectly. The material feels so premium." },
-        { id: 2, author: "David K.", avatar: "D", date: "July 22, 2026", rating: 4, verified: true, text: "Great quality, but the color is slightly darker than the picture. Still love it." },
-        { id: 3, author: "Amanda L.", avatar: "A", date: "June 05, 2026", rating: 5, verified: false, text: "My pet loves this! Will definitely order more from The Velvet Tails." }
-    ];
+    const initialReviews = [];
+    
+    const [localReviews, setLocalReviews] = useState(initialReviews);
+
+    const handleReviewSubmit = (e) => {
+        e.preventDefault();
+        if (!reviewForm.name || !reviewForm.text) return;
+        
+        const newReview = {
+            id: localReviews.length + 1,
+            author: reviewForm.name,
+            avatar: reviewForm.name.charAt(0).toUpperCase(),
+            date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            rating: reviewForm.rating,
+            verified: false,
+            text: reviewForm.text
+        };
+        
+        setLocalReviews([newReview, ...localReviews]);
+        setReviewForm({ name: '', text: '', rating: 5 });
+        setShowReviewModal(false);
+        alert("Review submitted successfully!");
+    };
 
     // Mock calculations
     const discountPercentage = currentProduct.compareAtPrice && currentProduct.compareAtPrice > currentProduct.price
         ? Math.round((1 - currentProduct.price / currentProduct.compareAtPrice) * 100)
         : 0;
 
-    const rating = 4.8;
-    const reviewCount = 128;
+    const reviewCount = localReviews.length;
+    const rating = reviewCount > 0 
+        ? (localReviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1)
+        : 0;
     
     // Recommend Products: Just pick 4 products from same category or random
     const recommendedProducts = PRODUCTS.filter(p => p.category === currentProduct.category && p._id !== currentProduct._id).slice(0, 4);
@@ -396,7 +420,8 @@ export default function ProductDetails() {
 
                         <div className="space-y-3 mb-8">
                             {[5, 4, 3, 2, 1].map(star => {
-                                const percentage = star === 5 ? 75 : star === 4 ? 15 : star === 3 ? 5 : star === 2 ? 3 : 2;
+                                const count = localReviews.filter(r => r.rating === star).length;
+                                const percentage = reviewCount > 0 ? Math.round((count / reviewCount) * 100) : 0;
                                 return (
                                     <div key={star} className="flex items-center gap-3 text-sm">
                                         <span className="w-12 font-medium text-charcoal">{star} Stars</span>
@@ -409,53 +434,63 @@ export default function ProductDetails() {
                             })}
                         </div>
 
-                        <button className="w-full py-3 border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white rounded-lg font-bold transition-colors">
+                        <button 
+                            onClick={() => setShowReviewModal(true)}
+                            className="w-full py-3 border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white rounded-lg font-bold transition-colors">
                             Write a Review
                         </button>
                     </div>
 
                     {/* Review List */}
                     <div className="md:col-span-8 space-y-8">
-                        {reviews.map(review => (
-                            <div key={review.id} className="border-b border-gray-100 pb-8 last:border-0 last:pb-0">
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-plum/10 text-plum font-bold flex items-center justify-center text-lg">
-                                            {review.avatar}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-bold text-charcoal">{review.author}</span>
-                                                {review.verified && (
-                                                    <span className="flex items-center text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-semibold">
-                                                        <CheckCircle className="w-3 h-3 mr-1" /> Verified
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <span className="text-xs text-charcoal/50">{review.date}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'text-gold fill-gold' : 'text-gray-200'}`} />
-                                        ))}
-                                    </div>
-                                </div>
-                                <p className="text-charcoal/80 font-sans leading-relaxed mb-4 pl-14">
-                                    "{review.text}"
-                                </p>
-                                <div className="flex items-center gap-4 pl-14">
-                                    <span className="text-xs text-charcoal/50">Was this review helpful?</span>
-                                    <button className="flex items-center gap-1 text-xs font-medium text-charcoal/60 hover:text-plum transition-colors">
-                                        <ThumbsUp className="w-3.5 h-3.5" /> Yes ({(review.id * 3) + 2})
-                                    </button>
-                                </div>
+                        {localReviews.length === 0 ? (
+                            <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
+                                <p className="text-charcoal/60 font-sans text-base mb-2">No reviews yet. Be the first to review this product!</p>
                             </div>
-                        ))}
+                        ) : (
+                            localReviews.map(review => (
+                                <div key={review.id} className="border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-plum/10 text-plum font-bold flex items-center justify-center text-lg">
+                                                {review.avatar}
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-charcoal">{review.author}</span>
+                                                    {review.verified && (
+                                                        <span className="flex items-center text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-semibold">
+                                                            <CheckCircle className="w-3 h-3 mr-1" /> Verified
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="text-xs text-charcoal/50">{review.date}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'text-gold fill-gold' : 'text-gray-200'}`} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <p className="text-charcoal/80 font-sans leading-relaxed mb-4 pl-14">
+                                        "{review.text}"
+                                    </p>
+                                    <div className="flex items-center gap-4 pl-14">
+                                        <span className="text-xs text-charcoal/50">Was this review helpful?</span>
+                                        <button className="flex items-center gap-1 text-xs font-medium text-charcoal/60 hover:text-plum transition-colors">
+                                            <ThumbsUp className="w-3.5 h-3.5" /> Yes ({(review.id * 3) + 2})
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                         
-                        <div className="pt-4 text-center">
-                            <button className="text-plum font-semibold hover:underline">Read All {reviewCount} Reviews</button>
-                        </div>
+                        {localReviews.length > 0 && (
+                            <div className="pt-4 text-center">
+                                <button className="text-plum font-semibold hover:underline">Read All {reviewCount} Reviews</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -473,6 +508,71 @@ export default function ProductDetails() {
                     ))}
                 </div>
             </div>
+
+            {/* Review Modal */}
+            {showReviewModal && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl w-full max-w-lg p-6 relative shadow-2xl">
+                        <button 
+                            onClick={() => setShowReviewModal(false)}
+                            className="absolute top-4 right-4 text-charcoal/50 hover:text-charcoal transition-colors"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        
+                        <h3 className="text-2xl font-bold font-serif text-charcoal mb-6">Write a Review</h3>
+                        
+                        <form onSubmit={handleReviewSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-charcoal mb-2">Rating</label>
+                                <div className="flex gap-2">
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <button 
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setReviewForm({...reviewForm, rating: star})}
+                                            className="focus:outline-none"
+                                        >
+                                            <Star className={`w-8 h-8 ${star <= reviewForm.rating ? 'text-gold fill-gold' : 'text-gray-300'}`} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-bold text-charcoal mb-2">Name</label>
+                                <input 
+                                    type="text" 
+                                    required
+                                    value={reviewForm.name}
+                                    onChange={e => setReviewForm({...reviewForm, name: e.target.value})}
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-plum focus:border-plum outline-none transition-all"
+                                    placeholder="Your Name"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-bold text-charcoal mb-2">Review</label>
+                                <textarea 
+                                    required
+                                    rows="4"
+                                    value={reviewForm.text}
+                                    onChange={e => setReviewForm({...reviewForm, text: e.target.value})}
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-plum focus:border-plum outline-none transition-all resize-none"
+                                    placeholder="Share your experience..."
+                                ></textarea>
+                            </div>
+                            
+                            <button 
+                                type="submit"
+                                className="w-full py-4 bg-plum text-white font-bold rounded-lg hover:bg-plum/90 transition-colors shadow-lg mt-4"
+                            >
+                                Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

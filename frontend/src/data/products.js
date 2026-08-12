@@ -3721,9 +3721,32 @@ export const CATEGORIES = [...new Set(PRODUCTS.map(p => p.category))];
 export function filterProducts({ category, search } = {}) {
   let result = PRODUCTS;
 
-  // Category filter — exact match on the category field
+  // Category filter — handle frontend sub-category mappings
   if (category) {
-    result = result.filter(p => p.category === category);
+    const c = category.toLowerCase();
+    
+    if (c === 'velvet collars') {
+      result = result.filter(p => p.category === 'Collars & Harnesses' && p.title.toLowerCase().includes('collar'));
+    } else if (c === 'reflective collars') {
+      result = result.filter(p => p.category === 'Collars & Harnesses' && p.title.toLowerCase().includes('collar') && (p.title.toLowerCase().includes('safeglow') || p.title.toLowerCase().includes('reflective')));
+    } else if (c === 'velvet harness sets' || c === 'harness sets') {
+      result = result.filter(p => p.category === 'Collars & Harnesses' && p.title.toLowerCase().includes('harness') && !p.title.toLowerCase().includes('little paws'));
+    } else if (c === 'little paws harnesses sets' || c === 'little paws') {
+      result = result.filter(p => p.category === 'Collars & Harnesses' && p.title.toLowerCase().includes('little paws'));
+    } else if (c === 'velvet leashes' || c === 'leashes & leads') {
+      result = result.filter(p => p.category === 'Leashes & Leads');
+    } else if (c === 'night walk sets' || c === 'night walk') {
+      result = result.filter(p => p.category === 'Night Walk');
+    } else if (c === 'velvet accessories' || c === 'accessories') {
+      result = result.filter(p => p.category === 'Accessories');
+    } else if (c === 'playtime essentials' || c === 'playtime') {
+      result = result.filter(p => p.category === 'Playtime');
+    } else if (c === 'cat collars' || c === 'cat toys' || c === 'cat accessories') {
+      result = result.filter(p => p.category === category);
+    } else {
+      // exact match fallback
+      result = result.filter(p => p.category === category || p.category.toLowerCase() === c);
+    }
   }
 
   // Keyword/search filter — checks title first, then description, then tags

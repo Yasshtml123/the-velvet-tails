@@ -1,15 +1,21 @@
 import { Link } from 'react-router-dom';
+import { filterProducts } from '@/data/products.js';
 
 export default function CategoryShowcase() {
     const categoriesData = [
-        { name: 'Velvet Collars', count: 12, image: '/categories/collars.png' },
-        { name: 'Velvet Leashes', count: 8, image: '/categories/leashes.png' },
-        { name: 'Velvet Harness Sets', count: 15, image: '/categories/harnessSets.png' },
-        { name: 'Little Paws Harnesses Sets', count: 7, image: '/categories/lpHarnessSets.png' },
-        { name: 'Night Walk Sets', count: 5, image: '/categories/nightWalkSets.png' },
-        { name: 'Velvet Accessories', count: 20, image: '/categories/accessories.png' },
-        { name: 'Playtime Essentials', count: 14, image: '/categories/playtimeEssentials.png' },
+        { name: 'Velvet Collars', image: '/categories/collars.png' },
+        { name: 'Velvet Leashes', image: '/categories/leashes.png' },
+        { name: 'Velvet Harness Sets', image: '/categories/harnessSets.png' },
+        { name: 'Little Paws Harnesses Sets', image: '/categories/lpHarnessSets.png' },
+        { name: 'Night Walk Sets', image: '/categories/nightWalkSets.png' },
+        { name: 'Velvet Accessories', image: '/categories/accessories.png' },
+        { name: 'Playtime Essentials', image: '/categories/playtimeEssentials.png' },
     ];
+
+    const categoriesWithCount = categoriesData.map(cat => ({
+        ...cat,
+        count: filterProducts({ category: cat.name }).length
+    }));
 
     return (
         <div className="py-16 lg:py-24 bg-cream">
@@ -26,7 +32,7 @@ export default function CategoryShowcase() {
 
                 {/* Grid */}
                 <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                    {categoriesData.map((category, index) => (
+                    {categoriesWithCount.map((category, index) => (
                         <Link
                             key={category.name}
                             to={`/products?category=${encodeURIComponent(category.name)}`}

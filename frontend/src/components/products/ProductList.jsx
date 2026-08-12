@@ -215,26 +215,37 @@ export default function ProductList() {
           {/* ── Toolbar: Filter Toggle + Sort By ── */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
 
-            {/* Left: Filter toggle button */}
-            <button
-              id="toggle-filters-btn"
-              onClick={() => setShowFilters(prev => !prev)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border font-sans text-sm font-semibold transition-all duration-200 ${
-                showFilters
-                  ? 'bg-plum text-white border-plum shadow-sm'
-                  : 'bg-white text-charcoal border-blush hover:border-plum/40 hover:bg-cream'
-              }`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              Filter By
-              {activeFilterCount > 0 && (
-                <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold ${
-                  showFilters ? 'bg-white text-plum' : 'bg-plum text-white'
-                }`}>
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
+            {/* Left: Filter toggle button and All button */}
+            <div className="flex items-center gap-3">
+              <button
+                id="toggle-filters-btn"
+                onClick={() => setShowFilters(prev => !prev)}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border font-sans text-sm font-semibold transition-all duration-200 ${
+                  showFilters
+                    ? 'bg-plum text-white border-plum shadow-sm'
+                    : 'bg-white text-charcoal border-blush hover:border-plum/40 hover:bg-cream'
+                }`}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Filter By
+                {activeFilterCount > 0 && (
+                  <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold ${
+                    showFilters ? 'bg-white text-plum' : 'bg-plum text-white'
+                  }`}>
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                id="clear-all-filters-btn"
+                onClick={handleClearAllFilters}
+                className="px-4 py-2 bg-white border border-blush hover:border-plum/40 hover:bg-cream text-charcoal font-sans text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm shadow-blush/20"
+                aria-label="Clear all filters"
+              >
+                All
+              </button>
+            </div>
 
             {/* Right: Sort By dropdown */}
             <div className="relative">

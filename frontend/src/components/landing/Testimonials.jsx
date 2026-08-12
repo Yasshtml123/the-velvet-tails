@@ -155,8 +155,8 @@ export default function Testimonials() {
         {/* ── Review cards grid ── */}
         {reviews.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-white drop-shadow-md font-sans text-base mb-2">No reviews yet — be the first!</p>
-            <p className="text-white/90 drop-shadow-md font-sans text-sm">Click "Write a Review" above to share your experience.</p>
+            <p className="text-white drop-shadow-lg font-sans text-xl md:text-2xl font-semibold mb-2">No reviews yet — be the first!</p>
+            <p className="text-white/90 drop-shadow-lg font-sans text-base md:text-lg">Click "Write a Review" above to share your experience.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

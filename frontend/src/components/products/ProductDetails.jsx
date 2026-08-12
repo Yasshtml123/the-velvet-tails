@@ -9,7 +9,7 @@ import { formatPrice } from '@/utils/formatters.js';
 import { 
     Star, Heart, Share2, ShieldCheck, Truck, RefreshCcw, 
     CheckCircle, ChevronDown, ChevronUp, ThumbsUp, Check, 
-    MessageCircle, Link2, ShoppingBag, X, Send, Quote 
+    MessageCircle, Link2, ShoppingBag, X, Send, Quote, Trash2 
 } from 'lucide-react';
 
 // ─── Interactive star-picker used inside the form ─────────────────────────────
@@ -154,6 +154,10 @@ export default function ProductDetails() {
         setLocalReviews([newReview, ...localReviews]);
         setSubmitted(true);
         setTimeout(() => closeForm(), 1400);
+    };
+
+    const handleDeleteReview = (id) => {
+        setLocalReviews((prev) => prev.filter((r) => r.id !== id));
     };
 
     // Mock calculations
@@ -491,6 +495,17 @@ export default function ProductDetails() {
                             localReviews.map(review => (
                                 <div key={review.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm relative group transition-all duration-300 hover:shadow-md">
                                     <Quote className="absolute top-6 right-6 w-8 h-8 text-plum/5" />
+                                    
+                                    {review.isUserSubmitted && (
+                                        <button
+                                            onClick={() => handleDeleteReview(review.id)}
+                                            aria-label="Delete this review"
+                                            title="Delete review"
+                                            className="absolute top-3 left-3 w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 transition-all duration-200 shadow-sm"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    )}
                                     
                                     <div className="flex items-center gap-1 mb-4">
                                         {[...Array(5)].map((_, i) => (

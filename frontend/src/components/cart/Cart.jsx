@@ -22,11 +22,7 @@ export default function Cart() {
     };
 
     const handleCheckout = () => {
-        if (!isAuthenticated) {
-            navigate('/login?redirect=/checkout');
-        } else {
-            navigate('/checkout');
-        }
+        navigate('/checkout');
     };
 
     if (cartItems.length === 0) {

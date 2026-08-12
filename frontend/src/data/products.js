@@ -3724,7 +3724,7 @@ export function filterProducts({ category, search } = {}) {
   // Category filter — handle frontend sub-category mappings
   if (category) {
     const c = category.toLowerCase();
-    
+
     if (c === 'velvet collars') {
       result = result.filter(p => p.category === 'Collars & Harnesses' && p.title.toLowerCase().includes('collar'));
     } else if (c === 'reflective collars') {

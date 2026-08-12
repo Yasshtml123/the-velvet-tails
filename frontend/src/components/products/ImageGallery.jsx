@@ -26,8 +26,8 @@ export default function ImageGallery({ images }) {
             {/* Main Image */}
             <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-100">
                 <img
-                    src={optimizeCloudinaryUrl(currentImageUrl, { width: 800, quality: 'auto', format: 'auto' })}
-                    alt={`Product image ${selectedIndex + 1}`}
+                    src={optimizeCloudinaryUrl(currentImageUrl, 800)}
+                    alt={currentProduct?.title ? `${currentProduct.title} — image ${selectedIndex + 1}` : `Product image ${selectedIndex + 1}`}
                     className="h-full w-full object-cover object-center"
                     loading="eager"
                     decoding="async"
@@ -52,7 +52,7 @@ export default function ImageGallery({ images }) {
                                 }`}
                             >
                                 <img
-                                    src={optimizeCloudinaryUrl(imgUrl, { width: 150, quality: 'auto', format: 'auto' })}
+                                    src={optimizeCloudinaryUrl(imgUrl, 150)}
                                     alt={`Thumbnail ${index + 1}`}
                                     className="h-full w-full object-cover object-center"
                                     loading="lazy"

@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
   }
 
 
-    const { limit = 20, category, q } = req.query;
+    const { limit = 100, category, q } = req.query;
     const filter = {};
 
     if (category) filter.category = category;

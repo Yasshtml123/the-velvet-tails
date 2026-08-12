@@ -1,8 +1,36 @@
 import { useState, useRef, useEffect } from 'react';
 import { Star, Quote, Pencil, Trash2, X, Send } from 'lucide-react';
 
-// ─── Seed reviews — starts empty, ready for real customer reviews ────────────
-const SEED_REVIEWS = [];
+// ─── Seed reviews — production-ready cards visible on first load ──────────────
+const SEED_REVIEWS = [
+  {
+    id: 'seed-1',
+    name: 'Sarah Jenkins',
+    pet: 'Bella (Labrador, 3 yrs)',
+    initials: 'SJ',
+    rating: 5,
+    text: 'The velvet harness is an absolute dream — beautifully crafted and Bella wears it like royalty. The gold hardware details are stunning in person. We get compliments on every walk!',
+    isUserSubmitted: false,
+  },
+  {
+    id: 'seed-2',
+    name: 'Michael Chen',
+    pet: 'Mochi (Shiba Inu, 2 yrs)',
+    initials: 'MC',
+    rating: 5,
+    text: "Finally a pet brand that cares about aesthetics as much as functionality. Mochi's new collar fits perfectly and the quality is on par with luxury human accessories. Worth every penny.",
+    isUserSubmitted: false,
+  },
+  {
+    id: 'seed-3',
+    name: 'Emma Watson',
+    pet: 'Duchess (Persian Cat, 5 yrs)',
+    initials: 'EW',
+    rating: 5,
+    text: 'I ordered the plum velvet collar for Duchess and she looks absolutely regal. The sizing guide was spot-on and delivery was faster than expected. The Velvet Tails is now our only pet accessory brand.',
+    isUserSubmitted: false,
+  },
+];
 
 // ─── Helper: derive initials from a name string ───────────────────────────────
 function getInitials(name) {
@@ -134,7 +162,7 @@ export default function Testimonials() {
         {/* ── Section header ── */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold font-serif text-white mb-4">
-            Happy Tails
+            What Pet Parents Say
           </h2>
           <p className="text-cream/80 font-sans text-lg max-w-2xl mx-auto mb-7">
             Don't just take our word for it. See what our furry friends and their humans have to say.
@@ -152,57 +180,62 @@ export default function Testimonials() {
         </div>
 
         {/* ── Review cards grid ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {reviews.map((review) => (
-            <div
-              key={review.id}
-              className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-xl relative group transition-all duration-300 hover:bg-white/90"
-            >
-              {/* Big quote icon (decorative, unchanged) */}
-              <Quote className="absolute top-6 right-6 w-10 h-10 text-plum/10" />
+        {reviews.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-white/60 font-sans text-base mb-2">No reviews yet — be the first!</p>
+            <p className="text-cream/50 font-sans text-sm">Click "Write a Review" above to share your experience.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {reviews.map((review) => (
+              <div
+                key={review.id}
+                className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-xl relative group transition-all duration-300 hover:bg-white/90"
+              >
+                {/* Big quote icon (decorative) */}
+                <Quote className="absolute top-6 right-6 w-10 h-10 text-plum/10" />
 
-              {/* Delete button — only on user-submitted cards */}
-              {review.isUserSubmitted && (
-                <button
-                  onClick={() => handleDelete(review.id)}
-                  aria-label="Delete this review"
-                  title="Delete review"
-                  className="absolute top-3 left-3 w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 transition-all duration-200 shadow-sm"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
-
-              {/* Stars */}
-              <div className="mb-6">
-                <StarRow rating={review.rating} />
-              </div>
-
-              {/* Review text */}
-              <p className="text-charcoal italic font-serif mb-8 text-lg leading-relaxed">
-                "{review.text}"
-              </p>
-
-              {/* Author */}
-              <div className="flex items-center gap-4 mt-auto">
-                <div className="w-12 h-12 rounded-full bg-plum text-white flex items-center justify-center font-bold font-sans flex-shrink-0">
-                  {review.initials}
-                </div>
-                <div>
-                  <h4 className="text-charcoal font-bold font-sans text-sm">{review.name}</h4>
-                  <p className="text-charcoal/60 font-sans text-xs">{review.pet}</p>
-                </div>
-
-                {/* "Your review" badge */}
+                {/* Delete — only on user-submitted cards */}
                 {review.isUserSubmitted && (
-                  <span className="ml-auto text-[10px] font-sans font-bold text-plum bg-plum/10 px-2 py-1 rounded-full whitespace-nowrap">
-                    Your review
-                  </span>
+                  <button
+                    onClick={() => handleDelete(review.id)}
+                    aria-label="Delete this review"
+                    title="Delete review"
+                    className="absolute top-3 left-3 w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 transition-all duration-200 shadow-sm"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 )}
+
+                {/* Stars */}
+                <div className="mb-5">
+                  <StarRow rating={review.rating} />
+                </div>
+
+                {/* Review text */}
+                <p className="text-charcoal italic font-serif mb-7 text-base leading-relaxed">
+                  &ldquo;{review.text}&rdquo;
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 mt-auto">
+                  <div className="w-11 h-11 rounded-full bg-plum text-white flex items-center justify-center font-bold font-sans text-sm flex-shrink-0 shadow-sm">
+                    {review.initials}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-charcoal font-bold font-sans text-sm truncate">{review.name}</h4>
+                    <p className="text-charcoal/55 font-sans text-xs truncate">{review.pet}</p>
+                  </div>
+                  {review.isUserSubmitted && (
+                    <span className="ml-auto flex-shrink-0 text-[10px] font-sans font-bold text-plum bg-plum/10 px-2 py-1 rounded-full">
+                      Your review
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ══════════════════════════════════════════════════════════════

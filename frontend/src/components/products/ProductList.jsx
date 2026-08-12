@@ -222,7 +222,7 @@ export default function ProductList() {
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             
             {/* ── Left Sidebar ── */}
-            <div className="w-full lg:w-64 shrink-0 bg-white border border-blush/60 rounded-2xl p-6 shadow-sm sticky top-24">
+            <div className="w-full lg:w-64 shrink-0 bg-white border border-blush/60 rounded-2xl p-6 shadow-sm sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-serif font-bold text-lg text-plum">FILTER BY</h2>
                 <button onClick={handleClearAllFilters} className="text-xs font-sans font-semibold text-charcoal/50 hover:text-plum transition-colors underline underline-offset-2">

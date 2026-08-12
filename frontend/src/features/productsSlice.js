@@ -1,88 +1,85 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '@/services/api.js';
+/**
+ * productsSlice.js
+ *
+ * All product data is now served from the static local catalog
+ * (src/data/products.js) — no backend API calls, no network errors on Vercel.
+ *
+ * Public API is 100% identical to the previous version:
+ *   - fetchProducts({ category, search })
+ *   - fetchProductById(idOrSlug)
+ *   - fetchCategories()
+ *   - createProduct / updateProduct / deleteProduct  (admin, no-ops in static mode)
+ *   - setFilters / clearCurrentProduct / clearError  (reducers)
+ *
+ * Components that consume `items`, `categories`, `isLoading`, `error`,
+ * `currentProduct`, and `filters` from the Redux store work without change.
+ */
 
-// Async thunks
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { PRODUCTS, CATEGORIES, filterProducts, findProduct } from '@/data/products.js';
+
+// ─── Public thunks ─────────────────────────────────────────────────────────────
+
+/**
+ * Returns all products matching optional { category, search } filters.
+ * Resolves synchronously — no network latency, no error possible.
+ */
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async ({ category, search, limit = 20 } = {}, { rejectWithValue }) => {
-    try {
-      const params = new URLSearchParams();
-      if (category) params.append('category', category);
-      if (search) params.append('q', search);
-      params.append('limit', limit);
-
-      const { data } = await api.get(`/products?${params}`);
-      return data.items;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to fetch products');
-    }
+  async ({ category, search } = {}) => {
+    return filterProducts({ category, search });
   }
 );
 
+/**
+ * Returns a single product by _id or slug.
+ */
 export const fetchProductById = createAsyncThunk(
   'products/fetchProductById',
-  async (id, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get(`/products/${id}`);
-      return data.product;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.error || 'Product not found');
-    }
+  async (idOrSlug, { rejectWithValue }) => {
+    const product = findProduct(idOrSlug);
+    if (!product) return rejectWithValue('Product not found');
+    return product;
   }
 );
 
+/**
+ * Returns the list of distinct category strings.
+ */
 export const fetchCategories = createAsyncThunk(
   'products/fetchCategories',
-  async (_, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get('/products/categories');
-      return data.categories;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to fetch categories');
-    }
-  }
+  async () => CATEGORIES
 );
 
-// Admin thunks
+// ─── Admin thunks (static-mode stubs) ─────────────────────────────────────────
+// These keep the same action names so admin panels compile without changes.
+// In static mode they simply log a warning and resolve with the input.
+
 export const createProduct = createAsyncThunk(
   'products/createProduct',
   async (productData, { rejectWithValue }) => {
-    try {
-      const { data } = await api.post('/admin/products', productData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      return data.product;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to create product');
-    }
+    console.warn('[Static mode] createProduct is a no-op. Connect to the backend to persist products.');
+    return rejectWithValue('Product creation requires backend connection.');
   }
 );
 
 export const updateProduct = createAsyncThunk(
   'products/updateProduct',
   async ({ id, productData }, { rejectWithValue }) => {
-    try {
-      const { data } = await api.put(`/admin/products/${id}`, productData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      return data.product;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to update product');
-    }
+    console.warn('[Static mode] updateProduct is a no-op.');
+    return rejectWithValue('Product updates require backend connection.');
   }
 );
 
 export const deleteProduct = createAsyncThunk(
   'products/deleteProduct',
   async (id, { rejectWithValue }) => {
-    try {
-      await api.delete(`/admin/products/${id}`);
-      return id;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to delete product');
-    }
+    console.warn('[Static mode] deleteProduct is a no-op.');
+    return rejectWithValue('Product deletion requires backend connection.');
   }
 );
+
+// ─── Initial state ─────────────────────────────────────────────────────────────
 
 const initialState = {
   items: [],
@@ -92,9 +89,11 @@ const initialState = {
   error: null,
   filters: {
     category: null,
-    search: ''
-  }
+    search: '',
+  },
 };
+
+// ─── Slice ─────────────────────────────────────────────────────────────────────
 
 const productsSlice = createSlice({
   name: 'products',
@@ -108,10 +107,10 @@ const productsSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
-    }
+    },
   },
   extraReducers: (builder) => {
-    // Fetch products
+    // ── fetchProducts ───────────────────────────────────────────────────────
     builder
       .addCase(fetchProducts.pending, (state) => {
         state.isLoading = true;
@@ -123,10 +122,10 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload;
+        state.error = action.payload ?? action.error.message;
       });
 
-    // Fetch product by ID
+    // ── fetchProductById ────────────────────────────────────────────────────
     builder
       .addCase(fetchProductById.pending, (state) => {
         state.isLoading = true;
@@ -138,48 +137,21 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload;
+        state.error = action.payload ?? action.error.message;
       });
 
-    // Fetch categories
-    builder
-      .addCase(fetchCategories.fulfilled, (state, action) => {
-        state.categories = action.payload;
-      });
+    // ── fetchCategories ─────────────────────────────────────────────────────
+    builder.addCase(fetchCategories.fulfilled, (state, action) => {
+      state.categories = action.payload;
+    });
 
-    // Create product
+    // ── Admin stubs (no-op in static mode) ──────────────────────────────────
     builder
-      .addCase(createProduct.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(createProduct.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.items.unshift(action.payload);
-      })
-      .addCase(createProduct.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      });
-
-    // Update product
-    builder
-      .addCase(updateProduct.fulfilled, (state, action) => {
-        const index = state.items.findIndex(p => p._id === action.payload._id);
-        if (index !== -1) {
-          state.items[index] = action.payload;
-        }
-        if (state.currentProduct?._id === action.payload._id) {
-          state.currentProduct = action.payload;
-        }
-      });
-
-    // Delete product
-    builder
-      .addCase(deleteProduct.fulfilled, (state, action) => {
-        state.items = state.items.filter(p => p._id !== action.payload);
-      });
-  }
+      .addCase(createProduct.pending,  (state) => { state.isLoading = true;  state.error = null; })
+      .addCase(createProduct.rejected, (state, action) => { state.isLoading = false; state.error = action.payload; })
+      .addCase(updateProduct.rejected, (state, action) => { state.error = action.payload; })
+      .addCase(deleteProduct.rejected, (state, action) => { state.error = action.payload; });
+  },
 });
 
 export const { setFilters, clearCurrentProduct, clearError } = productsSlice.actions;

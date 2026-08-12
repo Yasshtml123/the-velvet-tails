@@ -32,6 +32,7 @@ export default function ProductList() {
   
   // Sidebar filter state
   const [sortBy, setSortBy] = useState('relevance');
+  const [petType, setPetType] = useState('All');
   const [priceRange, setPriceRange] = useState([200, 2500]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
@@ -94,6 +95,7 @@ export default function ProductList() {
 
   const handleClearAllFilters = () => {
     setSortBy('relevance');
+    setPetType('All');
     setPriceRange([200, 2500]);
     setSelectedSizes([]);
     setSelectedColors([]);
@@ -116,6 +118,13 @@ export default function ProductList() {
 
   const displayedItems = useMemo(() => {
     let result = [...items];
+
+    // 0. Pet Type
+    if (petType === 'Dogs') {
+      result = result.filter(p => p.category && !p.category.toLowerCase().includes('cat'));
+    } else if (petType === 'Cats') {
+      result = result.filter(p => p.category && p.category.toLowerCase().includes('cat'));
+    }
 
     // 1. Price Range
     // Note: The UI slider says 200 to 2500. Our price is in rupees (100 paise = 1 rupee).
@@ -164,7 +173,7 @@ export default function ProductList() {
     }
 
     return result;
-  }, [items, sortBy, priceRange, selectedSizes, selectedColors, selectedMaterials, selectedRating, availability]);
+  }, [items, sortBy, petType, priceRange, selectedSizes, selectedColors, selectedMaterials, selectedRating, availability]);
 
   return (
     <div className="min-h-screen">
@@ -216,8 +225,27 @@ export default function ProductList() {
 
               <div className="space-y-6 divide-y divide-blush/40">
                 
-                {/* Price Range */}
+                {/* Pet Type */}
                 <div className="pt-4 first:pt-0">
+                  <h3 className="font-sans font-semibold text-sm text-charcoal mb-3">Pet Type</h3>
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => setPetType(petType === 'Dogs' ? 'All' : 'Dogs')}
+                      className={`px-4 py-2 text-left rounded-xl border text-sm font-sans font-semibold transition-all duration-200 ${petType === 'Dogs' ? 'bg-plum text-white border-plum shadow-sm' : 'bg-white text-charcoal border-blush hover:border-plum/40 hover:bg-cream'}`}
+                    >
+                      All Dogs Products
+                    </button>
+                    <button 
+                      onClick={() => setPetType(petType === 'Cats' ? 'All' : 'Cats')}
+                      className={`px-4 py-2 text-left rounded-xl border text-sm font-sans font-semibold transition-all duration-200 ${petType === 'Cats' ? 'bg-plum text-white border-plum shadow-sm' : 'bg-white text-charcoal border-blush hover:border-plum/40 hover:bg-cream'}`}
+                    >
+                      All Cats Products
+                    </button>
+                  </div>
+                </div>
+
+                {/* Price Range */}
+                <div className="pt-6">
                   <h3 className="font-sans font-semibold text-sm text-charcoal mb-4 flex justify-between items-center">
                     Price Range
                     <span className="font-normal text-xs text-charcoal/60">₹{priceRange[0]} - ₹{priceRange[1]}</span>
@@ -356,6 +384,14 @@ export default function ProductList() {
                 </div>
 
                 <div className="flex items-center gap-4">
+                  {/* All Button */}
+                  <button
+                    onClick={handleClearAllFilters}
+                    className="px-4 py-2 bg-white border border-blush/60 rounded-xl font-sans text-sm font-semibold text-charcoal hover:border-plum/40 hover:bg-cream transition-all duration-200 shadow-sm"
+                  >
+                    All
+                  </button>
+
                   {/* View Toggles */}
                   <div className="flex items-center bg-white border border-blush/60 rounded-xl p-1 shadow-sm">
                     <button 

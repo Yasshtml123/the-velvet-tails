@@ -3730,7 +3730,7 @@ export function filterProducts({ category, search } = {}) {
     );
   }
   // Sort newer products first for NewArrivals
-  return result.reverse();
+  return [...result].reverse();
 }
 
 export function findProduct(idOrSlug) {

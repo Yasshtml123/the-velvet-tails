@@ -53,11 +53,16 @@ export default function ProductList() {
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category');
     const searchFromUrl   = searchParams.get('search');
+    const isViewAll       = searchParams.get('view') === 'all';
+    
     if (categoryFromUrl || searchFromUrl) {
       dispatch(setFilters({
         category: categoryFromUrl || null,
         search:   searchFromUrl   || null,
       }));
+      setShowLanding(false);
+    } else if (isViewAll) {
+      dispatch(setFilters({ category: null, search: null }));
       setShowLanding(false);
     } else {
       // No filters in URL - reset to landing page
@@ -76,7 +81,9 @@ export default function ProductList() {
 
   // Hide landing sections when filters are applied
   useEffect(() => {
-    setShowLanding(!filters.category && !filters.search);
+    if (filters.category || filters.search) {
+      setShowLanding(false);
+    }
   }, [filters]);
 
   const handleCategoryChange = (category) => {

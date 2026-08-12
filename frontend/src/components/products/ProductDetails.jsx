@@ -33,14 +33,14 @@ export default function ProductDetails() {
     };
 
     const handleAddToCart = () => {
-        if (!currentProduct) return;
+        if (!currentProduct || !currentProduct?._id) return;
 
         if (!user) {
-            navigate('/login', { state: { from: `/products/${currentProduct._id}` } });
+            navigate('/login', { state: { from: `/products/${currentProduct?._id}` } });
             return;
         }
 
-        if (currentProduct.inventory === 0 || quantity > currentProduct.inventory) {
+        if (!currentProduct?.inventory || quantity > currentProduct.inventory) {
             return;
         }
 
@@ -58,7 +58,7 @@ export default function ProductDetails() {
         );
     }
 
-    if (error || !currentProduct) {
+    if (error || !currentProduct || Object.keys(currentProduct).length === 0 || !currentProduct?.title) {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="text-center">
@@ -75,8 +75,8 @@ export default function ProductDetails() {
         );
     }
 
-    const discountPercentage = currentProduct.compareAtPrice && currentProduct.compareAtPrice > currentProduct.price
-        ? Math.round((1 - currentProduct.price / currentProduct.compareAtPrice) * 100)
+    const discountPercentage = currentProduct?.compareAtPrice && currentProduct?.compareAtPrice > (currentProduct?.price || 0)
+        ? Math.round((1 - (currentProduct?.price || 0) / currentProduct?.compareAtPrice) * 100)
         : 0;
 
     // Mock data for sizes, colors, and reviews
@@ -104,32 +104,32 @@ export default function ProductDetails() {
                 <span className="mx-2 text-charcoal/40">/</span>
                 <Link to="/products" className="text-charcoal/60 hover:text-plum transition-colors">Products</Link>
                 <span className="mx-2 text-charcoal/40">/</span>
-                <span className="text-charcoal/80 font-medium">{currentProduct.category}</span>
+                <span className="text-charcoal/80 font-medium">{currentProduct?.category || 'Category'}</span>
                 <span className="mx-2 text-charcoal/40">/</span>
-                <span className="text-plum font-semibold truncate">{currentProduct.title}</span>
+                <span className="text-plum font-semibold truncate">{currentProduct?.title || 'Product'}</span>
             </nav>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
                 {/* Image Gallery */}
                 <div className="relative">
-                    <ImageGallery images={currentProduct.images} />
+                    <ImageGallery images={currentProduct?.images || []} />
                 </div>
 
                 {/* Product Info */}
                 <div className="flex flex-col space-y-8">
                     {/* Title, Category & Price */}
                     <div>
-                        <p className="text-sm font-sans font-bold text-gold uppercase tracking-wider mb-2">{currentProduct.category}</p>
-                        <h1 className="text-3xl md:text-4xl font-bold font-serif text-charcoal mb-4 leading-tight">{currentProduct.title}</h1>
+                        <p className="text-sm font-sans font-bold text-gold uppercase tracking-wider mb-2">{currentProduct?.category}</p>
+                        <h1 className="text-3xl md:text-4xl font-bold font-serif text-charcoal mb-4 leading-tight">{currentProduct?.title}</h1>
                         
                         <div className="flex items-baseline gap-3 mb-2">
                             <span className="text-3xl font-bold font-sans text-plum">
-                                {formatPrice(currentProduct.price)}
+                                {formatPrice(currentProduct?.price || 0)}
                             </span>
-                            {currentProduct.compareAtPrice && currentProduct.compareAtPrice > currentProduct.price && (
+                            {currentProduct?.compareAtPrice && currentProduct?.compareAtPrice > (currentProduct?.price || 0) && (
                                 <>
                                     <span className="text-xl font-sans text-charcoal/40 line-through">
-                                        {formatPrice(currentProduct.compareAtPrice)}
+                                        {formatPrice(currentProduct?.compareAtPrice)}
                                     </span>
                                     <span className="px-2.5 py-1 text-xs font-bold font-sans text-white bg-sage rounded-full shadow-sm">
                                         {discountPercentage}% OFF
@@ -217,11 +217,11 @@ export default function ProductDetails() {
                                 </h3>
                                 <p className="text-sm font-sans text-charcoal/70 mb-4">
                                     You are viewing this product as an administrator. 
-                                    Inventory: <span className="font-bold text-charcoal">{currentProduct.inventory} units</span>
+                                    Inventory: <span className="font-bold text-charcoal">{currentProduct?.inventory || 0} units</span>
                                 </p>
                                 <div className="flex gap-4">
                                     <button
-                                        onClick={() => navigate(`/admin/products/edit/${currentProduct._id}`)}
+                                        onClick={() => navigate(`/admin/products/edit/${currentProduct?._id}`)}
                                         className="flex-1 py-3 bg-plum hover:bg-plum/90 text-white font-sans font-semibold rounded-full transition-all shadow-md active:scale-95"
                                     >
                                         Edit Product
@@ -236,7 +236,7 @@ export default function ProductDetails() {
                                         <button
                                             onClick={() => handleQuantityChange(quantity - 1)}
                                             className="px-4 text-charcoal/60 hover:text-plum font-bold text-lg"
-                                            disabled={currentProduct.inventory === 0}
+                                            disabled={!currentProduct?.inventory || currentProduct?.inventory === 0}
                                         >
                                             -
                                         </button>
@@ -245,12 +245,12 @@ export default function ProductDetails() {
                                             value={quantity}
                                             onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
                                             className="w-12 text-center font-sans font-semibold text-charcoal bg-transparent focus:outline-none"
-                                            disabled={currentProduct.inventory === 0}
+                                            disabled={!currentProduct?.inventory || currentProduct?.inventory === 0}
                                         />
                                         <button
                                             onClick={() => handleQuantityChange(quantity + 1)}
                                             className="px-4 text-charcoal/60 hover:text-plum font-bold text-lg"
-                                            disabled={currentProduct.inventory === 0}
+                                            disabled={!currentProduct?.inventory || currentProduct?.inventory === 0}
                                         >
                                             +
                                         </button>
@@ -259,10 +259,10 @@ export default function ProductDetails() {
                                     {/* Add to Cart */}
                                     <button
                                         onClick={handleAddToCart}
-                                        disabled={currentProduct.inventory === 0}
+                                        disabled={!currentProduct?.inventory || currentProduct?.inventory === 0}
                                         className="flex-1 h-12 bg-plum hover:bg-plum/90 text-white font-sans font-bold text-lg rounded-full shadow-lg shadow-plum/20 transition-all transform hover:scale-[1.02] active:scale-95 disabled:bg-charcoal/30 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed"
                                     >
-                                        {currentProduct.inventory === 0 ? 'Out of Stock' : 'Add to Cart'}
+                                        {(!currentProduct?.inventory || currentProduct?.inventory === 0) ? 'Out of Stock' : 'Add to Cart'}
                                     </button>
                                 </div>
                                 

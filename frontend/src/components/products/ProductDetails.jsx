@@ -87,8 +87,8 @@ export default function ProductDetails() {
         { name: 'Charcoal', hex: '#1A1A2E' }
     ];
     
-    // Convert text to bullet points
-    const descriptionPoints = currentProduct.description.split('. ').filter(Boolean);
+    // Convert text to bullet points safely
+    const descriptionPoints = currentProduct.description?.split('. ').filter(Boolean) || [];
 
     const reviews = [
         { id: 1, author: "Jessica M.", date: "August 10, 2026", rating: 5, text: "Absolutely beautiful and fits perfectly. The material feels so premium." },

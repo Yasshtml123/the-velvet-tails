@@ -19,7 +19,7 @@ export default function ImageGallery({ images }) {
 
     const currentImageUrl = typeof images[selectedIndex] === 'string' 
         ? images[selectedIndex] 
-        : images[selectedIndex]?.url;
+        : images?.[selectedIndex]?.url || images?.[0]?.url;
 
     return (
         <div className="space-y-4">
@@ -41,6 +41,7 @@ export default function ImageGallery({ images }) {
                 <div className="grid grid-cols-5 gap-2">
                     {images.map((image, index) => {
                         const imgUrl = typeof image === 'string' ? image : image?.url;
+                        if (!imgUrl) return null;
                         return (
                             <button
                                 key={index}

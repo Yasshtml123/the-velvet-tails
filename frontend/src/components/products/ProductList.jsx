@@ -274,6 +274,12 @@ export default function ProductList() {
                   <div className="space-y-2.5">
                     {SIZES.map(size => (
                       <label key={size} className="flex items-center gap-3 cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          className="hidden" 
+                          checked={selectedSizes.includes(size)}
+                          onChange={() => toggleArrayItem(selectedSizes, setSelectedSizes, size)}
+                        />
                         <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${selectedSizes.includes(size) ? 'bg-plum border-plum text-white' : 'border-charcoal/30 bg-white group-hover:border-plum/50'}`}>
                           {selectedSizes.includes(size) && <Check className="w-3 h-3" />}
                         </div>
@@ -306,6 +312,12 @@ export default function ProductList() {
                   <div className="space-y-2.5">
                     {MATERIALS.map(material => (
                       <label key={material} className="flex items-center gap-3 cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          className="hidden" 
+                          checked={selectedMaterials.includes(material)}
+                          onChange={() => toggleArrayItem(selectedMaterials, setSelectedMaterials, material)}
+                        />
                         <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${selectedMaterials.includes(material) ? 'bg-plum border-plum text-white' : 'border-charcoal/30 bg-white group-hover:border-plum/50'}`}>
                           {selectedMaterials.includes(material) && <Check className="w-3 h-3" />}
                         </div>

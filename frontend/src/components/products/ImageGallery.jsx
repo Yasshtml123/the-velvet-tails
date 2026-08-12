@@ -27,7 +27,7 @@ export default function ImageGallery({ images }) {
             <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-100">
                 <img
                     src={optimizeCloudinaryUrl(currentImageUrl, 800)}
-                    alt={currentProduct?.title ? `${currentProduct.title} — image ${selectedIndex + 1}` : `Product image ${selectedIndex + 1}`}
+                    alt={`Product image ${selectedIndex + 1}`}
                     className="h-full w-full object-cover object-center"
                     loading="eager"
                     decoding="async"

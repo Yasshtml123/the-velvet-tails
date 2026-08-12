@@ -32,10 +32,6 @@ export default function ProductDetails() {
 
     const handleAddToCart = () => {
         if (!currentProduct || !currentProduct?._id) return;
-        if (!user) {
-            navigate('/login', { state: { from: `/products/${currentProduct?._id}` } });
-            return;
-        }
         dispatch(addToCart({ product: currentProduct, quantity }));
     };
 

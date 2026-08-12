@@ -268,11 +268,6 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!user) {
-      navigate('/login', { state: { from: `/products/${product._id}` } });
-      return;
-    }
-
     dispatch(addToCart({ product, quantity: 1 }));
   };
 

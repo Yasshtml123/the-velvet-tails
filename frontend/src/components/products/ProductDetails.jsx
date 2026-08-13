@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { findProduct, PRODUCTS } from '@/data/products.js';
@@ -56,6 +57,8 @@ export default function ProductDetails() {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewForm, setReviewForm] = useState({ name: '', pet: '', rating: 5, text: '' });
     const [submitted, setSubmitted] = useState(false);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+    const [submitError, setSubmitError] = useState(null);
 
     const currentProduct = findProduct(id);
 
@@ -122,37 +125,85 @@ export default function ProductDetails() {
 
     const descriptionPoints = currentProduct.description?.split('. ').filter(Boolean) || [];
 
-    const initialReviews = [];
-    
-    const [localReviews, setLocalReviews] = useState(initialReviews);
+    const [localReviews, setLocalReviews] = useState([]);
+
+    // ── Fetch reviews from Supabase on mount ──────────────────────────────────
+    useEffect(() => {
+        if (!currentProduct?._id) return;
+        const fetchReviews = async () => {
+            setReviewsLoading(true);
+            const { data, error } = await supabase
+                .from('reviews')
+                .select('*')
+                .eq('product_id', currentProduct._id)
+                .order('created_at', { ascending: false });
+            if (!error && data) {
+                const getInitials = (name) => name?.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('') || '?';
+                setLocalReviews(data.map((r) => ({
+                    id: r.id,
+                    author: r.author_name,
+                    pet: r.pet_name || '—',
+                    avatar: getInitials(r.author_name),
+                    date: new Date(r.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                    rating: r.rating,
+                    verified: false,
+                    text: r.comment,
+                    isUserSubmitted: false,
+                })));
+            }
+            setReviewsLoading(false);
+        };
+        fetchReviews();
+    }, [currentProduct?._id]);
 
     const closeForm = () => {
         setShowReviewModal(false);
         setTimeout(() => {
             setSubmitted(false);
+            setSubmitError(null);
             setReviewForm({ name: '', pet: '', rating: 5, text: '' });
         }, 300);
     };
 
-    const handleReviewSubmit = (e) => {
+    // ── Submit review to Supabase ─────────────────────────────────────────────
+    const handleReviewSubmit = async (e) => {
         e.preventDefault();
         if (!reviewForm.name.trim() || !reviewForm.text.trim()) return;
-        
+        setSubmitError(null);
+
         const getInitials = (name) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('');
-        
-        const newReview = {
-            id: `user-${Date.now()}`,
-            author: reviewForm.name.trim(),
-            pet: reviewForm.pet?.trim() || '—',
-            avatar: getInitials(reviewForm.name) || '?',
-            date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-            rating: reviewForm.rating,
+
+        const { data, error } = await supabase
+            .from('reviews')
+            .insert([{
+                product_id: currentProduct._id,
+                author_name: reviewForm.name.trim(),
+                pet_name: reviewForm.pet?.trim() || null,
+                rating: reviewForm.rating,
+                comment: reviewForm.text.trim(),
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            setSubmitError('Failed to submit your review. Please try again.');
+            return;
+        }
+
+        // Optimistically prepend the new review to local state
+        const optimisticReview = {
+            id: data.id,
+            author: data.author_name,
+            pet: data.pet_name || '—',
+            avatar: getInitials(data.author_name) || '?',
+            date: new Date(data.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            rating: data.rating,
             verified: false,
-            text: reviewForm.text.trim(),
+            text: data.comment,
             isUserSubmitted: true,
         };
-        
-        setLocalReviews([newReview, ...localReviews]);
+
+        setLocalReviews((prev) => [optimisticReview, ...prev]);
         setSubmitted(true);
         setTimeout(() => closeForm(), 1400);
     };
@@ -721,6 +772,11 @@ export default function ProductDetails() {
                           </div>
 
                           {/* Submit */}
+                          {submitError && (
+                            <p className="text-red-300 text-xs font-sans bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/30">
+                              {submitError}
+                            </p>
+                          )}
                           <div className="flex gap-3 pt-1">
                             <button
                               type="button"

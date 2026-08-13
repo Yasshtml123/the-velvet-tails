@@ -5,9 +5,12 @@ document.getElementById("pay-btn").addEventListener("click", payNow);
 
 async function payNow() {
   try {
+    // Define dynamic API base - if import.meta.env is available (e.g. if bundled), use it; otherwise fallback.
+    const API_BASE = (typeof import_meta !== 'undefined' && import_meta.env && import_meta.env.VITE_API_URL) ? import_meta.env.VITE_API_URL : 'http://localhost:5000/api';
+
     //  CREATE Razorpay order (BACKEND)
     const res = await fetch(
-      `http://localhost:5000/api/payments/${ORDER_ID}/create`,
+      `${API_BASE}/payments/${ORDER_ID}/create`,
       {
         method: "POST",
         headers: {
@@ -39,7 +42,7 @@ async function payNow() {
 
         //  VERIFY payment
         const verifyRes = await fetch(
-          `http://localhost:5000/api/payments/${ORDER_ID}/verify`,
+          `${API_BASE}/payments/${ORDER_ID}/verify`,
           {
             method: "POST",
             headers: {

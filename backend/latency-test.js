@@ -235,7 +235,7 @@ export const options = {
 };
 
 const ORDER_ID = '6a60b6ef11134ee2b39a690b';
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = (typeof import_meta !== 'undefined' && import_meta.env ? import_meta.env.VITE_API_URL : (typeof process !== 'undefined' && process.env.VITE_API_URL)) || 'http://localhost:5000';
 
 export default function () {
   const url = `${BASE_URL}/api/payments/success`;

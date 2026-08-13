@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL,
   withCredentials: true, // Important for cookies (refreshToken)
   headers: {
     'Content-Type': 'application/json'
@@ -65,7 +67,7 @@ api.interceptors.response.use(
 
       try {
         const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh`,
+          `${baseURL}/auth/refresh`,
           {},
           { withCredentials: true }
         );

@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { optimizeCloudinaryUrl } from '@/utils/cloudinary.js'; // Adjust the import path as necessary
 
-export default function ImageGallery({ images }) {
-    const [selectedIndex, setSelectedIndex] = useState(0);
+export default function ImageGallery({ images, activeIndex, onIndexChange }) {
+    const [localIndex, setLocalIndex] = useState(0);
+
+    const isControlled = activeIndex !== undefined && onIndexChange !== undefined;
+    const selectedIndex = isControlled ? activeIndex : localIndex;
+    const setSelectedIndex = isControlled ? onIndexChange : setLocalIndex;
 
     if (!images || images.length === 0) {
         return (

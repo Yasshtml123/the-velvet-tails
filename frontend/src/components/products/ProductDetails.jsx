@@ -47,6 +47,7 @@ export default function ProductDetails() {
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState('Medium');
     const [selectedColor, setSelectedColor] = useState('Plum');
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
     
     // Accordion states
     const [openAccordion, setOpenAccordion] = useState('description');
@@ -160,9 +161,27 @@ export default function ProductDetails() {
         setLocalReviews((prev) => prev.filter((r) => r.id !== id));
     };
 
-    // Mock calculations
-    const discountPercentage = currentProduct.compareAtPrice && currentProduct.compareAtPrice > currentProduct.price
-        ? Math.round((1 - currentProduct.price / currentProduct.compareAtPrice) * 100)
+    // Dynamic Pricing Logic
+    const getDynamicPrice = () => {
+        const basePrice = currentProduct?.price || 0;
+        if (selectedSize === 'Medium') return Math.round(basePrice * 1.2);
+        if (selectedSize === 'Large') return Math.round(basePrice * 1.4);
+        return basePrice;
+    };
+    
+    const getDynamicComparePrice = () => {
+        if (!currentProduct?.compareAtPrice) return null;
+        const baseCompare = currentProduct.compareAtPrice;
+        if (selectedSize === 'Medium') return Math.round(baseCompare * 1.2);
+        if (selectedSize === 'Large') return Math.round(baseCompare * 1.4);
+        return baseCompare;
+    };
+
+    const currentDynamicPrice = getDynamicPrice();
+    const currentDynamicComparePrice = getDynamicComparePrice();
+
+    const discountPercentage = currentDynamicComparePrice && currentDynamicComparePrice > currentDynamicPrice
+        ? Math.round((1 - currentDynamicPrice / currentDynamicComparePrice) * 100)
         : 0;
 
     const reviewCount = localReviews.length;
@@ -192,7 +211,11 @@ export default function ProductDetails() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 mb-16">
                 {/* Image Gallery */}
                 <div className="lg:col-span-7 relative">
-                    <ImageGallery images={currentProduct?.images || []} />
+                    <ImageGallery 
+                        images={currentProduct?.images || []} 
+                        activeIndex={activeImageIndex} 
+                        onIndexChange={setActiveImageIndex} 
+                    />
                 </div>
 
                 {/* Product Info */}
@@ -217,11 +240,11 @@ export default function ProductDetails() {
 
                         <div className="flex items-end gap-3 mb-2">
                             <span className="text-3xl font-bold font-sans text-plum">
-                                {formatPrice(currentProduct?.price || 0)}
+                                {formatPrice(currentDynamicPrice)}
                             </span>
-                            {currentProduct.compareAtPrice && currentProduct.compareAtPrice > currentProduct.price && (
+                            {currentDynamicComparePrice && currentDynamicComparePrice > currentDynamicPrice && (
                                 <span className="text-lg text-charcoal/40 line-through mb-1">
-                                    {formatPrice(currentProduct.compareAtPrice)}
+                                    {formatPrice(currentDynamicComparePrice)}
                                 </span>
                             )}
                             {discountPercentage > 0 && (
@@ -240,10 +263,14 @@ export default function ProductDetails() {
                                     <h4 className="text-sm font-bold font-sans text-charcoal">Color: <span className="font-normal text-charcoal/70">{selectedColor}</span></h4>
                                 </div>
                                 <div className="flex gap-3">
-                                    {displayColors.map(color => (
+                                    {displayColors.map((color, index) => (
                                         <button
                                             key={color.name}
-                                            onClick={() => setSelectedColor(color.name)}
+                                            onClick={() => {
+                                                setSelectedColor(color.name);
+                                                const newIndex = index < (currentProduct?.images?.length || 1) ? index : 0;
+                                                setActiveImageIndex(newIndex);
+                                            }}
                                             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${selectedColor === color.name ? 'ring-2 ring-offset-2 ring-plum' : 'hover:scale-110 ring-1 ring-gray-200'}`}
                                             style={{ backgroundColor: color.hex }}
                                             aria-label={`Select color ${color.name}`}

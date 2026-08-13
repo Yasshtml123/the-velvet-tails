@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/features/authSlice.js';
 import Navbar from '@/components/layout/Navbar.jsx';
 import Footer from '@/components/layout/Footer.jsx';
 import PawBackground from '@/components/common/PawBackground.jsx';
+import ScrollToTop from '@/components/common/ScrollToTop.jsx';
 
 // Lazy load all route components
 const Login = lazy(() => import('@/components/auth/Login.jsx'));
@@ -58,6 +59,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-gray-50 relative">
         <PawBackground opacity={0.015} count={4} />
         <Navbar />

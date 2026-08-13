@@ -222,6 +222,13 @@ export default function ProductDetails() {
         'Orange': '#F6993F', 'Blue': '#3490DC', 'Gold': '#CBB26A',
         'Plum': '#5C3975', 'Charcoal': '#1A1A2E', 'Purple': '#5C3975',
         'Beige': '#F5F5DC', 'White': '#FFFFFF', 'Green': '#4CAF50',
+        'Yellow': '#FFD700',
+        'Desert Khaki': '#C3B091',
+        'Ranger Green': '#4A5D23',
+        'Natural Sand': '#C2B280',
+        'Floral Carnival': 'linear-gradient(45deg, #FFB6C1, #FF69B4)',
+        'Midnight Bloom': 'linear-gradient(45deg, #191970, #483D8B)',
+        'Spring Blossom': 'linear-gradient(45deg, #FFB7C5, #98FF98)'
     };
 
     // Find the currently displayed variant based on selected color + size
@@ -346,7 +353,7 @@ export default function ProductDetails() {
                                             key={color}
                                             onClick={() => handleColorSelect(color)}
                                             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${selectedColor === color ? 'ring-2 ring-offset-2 ring-plum scale-110' : 'hover:scale-110 ring-1 ring-gray-200'}`}
-                                            style={{ backgroundColor: COLOR_HEX_MAP[color] || '#888' }}
+                                            style={{ background: COLOR_HEX_MAP[color] || '#888' }}
                                             aria-label={`Select color ${color}`}
                                             title={color}
                                         >
@@ -500,7 +507,7 @@ export default function ProductDetails() {
                             <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openAccordion === 'specs' ? 'max-h-96 opacity-100 pb-4' : 'max-h-0 opacity-0'}`}>
                                 <div className="text-sm text-charcoal/80 font-sans grid grid-cols-2 gap-4">
                                     <div className="font-medium">Material:</div>
-                                    <div>Premium Velvet & Vegan Leather</div>
+                                    <div>{currentProduct.material || 'Premium Velvet & Vegan Leather'}</div>
                                     <div className="font-medium">Dimensions:</div>
                                     <div>{currentProduct.dimensions ? `${currentProduct.dimensions.length} x ${currentProduct.dimensions.breadth} x ${currentProduct.dimensions.height} cm` : 'Standard'}</div>
                                     <div className="font-medium">Weight:</div>

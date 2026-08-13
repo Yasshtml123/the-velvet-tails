@@ -2036,7 +2036,7 @@ export const PRODUCTS = [
     ],
     "category": "Playtime",
     "size": "One Size",
-    "color": "Mixed",
+    "color": "Natural Sand",
     "inventory": 56,
     "tags": [
       "dog",
@@ -2048,7 +2048,8 @@ export const PRODUCTS = [
       "breadth": 5,
       "height": 3,
       "weight": 0.3
-    }
+    },
+    "material": "Jute"
   },
   {
     "_id": "6a298c183c36a2ed83c245e6",
@@ -2075,7 +2076,7 @@ export const PRODUCTS = [
     ],
     "category": "Playtime",
     "size": "One Size",
-    "color": "Mixed",
+    "color": "Natural Sand",
     "inventory": 62,
     "tags": [
       "dog",
@@ -2087,7 +2088,8 @@ export const PRODUCTS = [
       "breadth": 5,
       "height": 3,
       "weight": 0.3
-    }
+    },
+    "material": "Jute"
   },
   {
     "_id": "6a2995733c36a2ed83c249d3",
@@ -2187,8 +2189,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Desert Khaki",
     "inventory": 47,
     "tags": [
       "dog",
@@ -2226,8 +2228,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Desert Khaki",
     "inventory": 22,
     "tags": [
       "dog",
@@ -2265,8 +2267,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Ranger Green",
     "inventory": 30,
     "tags": [
       "dog",
@@ -2304,8 +2306,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Ranger Green",
     "inventory": 67,
     "tags": [
       "dog",
@@ -2378,8 +2380,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Collars & Harnesses",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Floral Carnival",
     "inventory": 38,
     "tags": [
       "dog",
@@ -2417,8 +2419,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Collars & Harnesses",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Floral Carnival",
     "inventory": 35,
     "tags": [
       "dog",
@@ -2456,8 +2458,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Collars & Harnesses",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Floral Carnival",
     "inventory": 55,
     "tags": [
       "dog",
@@ -2495,8 +2497,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Collars & Harnesses",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Midnight Bloom",
     "inventory": 46,
     "tags": [
       "dog",
@@ -2534,8 +2536,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Collars & Harnesses",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Midnight Bloom",
     "inventory": 59,
     "tags": [
       "dog",
@@ -2573,8 +2575,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Collars & Harnesses",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Midnight Bloom",
     "inventory": 27,
     "tags": [
       "dog",
@@ -2612,8 +2614,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Collars & Harnesses",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Spring Blossom",
     "inventory": 29,
     "tags": [
       "dog",
@@ -2651,8 +2653,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Collars & Harnesses",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Spring Blossom",
     "inventory": 43,
     "tags": [
       "dog",
@@ -2690,8 +2692,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Collars & Harnesses",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Spring Blossom",
     "inventory": 42,
     "tags": [
       "dog",
@@ -2729,8 +2731,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Red",
     "inventory": 36,
     "tags": [
       "dog",
@@ -2768,8 +2770,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Red",
     "inventory": 23,
     "tags": [
       "dog",
@@ -2807,8 +2809,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Red",
     "inventory": 55,
     "tags": [
       "dog",
@@ -2846,8 +2848,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Yellow",
     "inventory": 21,
     "tags": [
       "dog",
@@ -2885,8 +2887,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Yellow",
     "inventory": 34,
     "tags": [
       "dog",
@@ -2924,8 +2926,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Yellow",
     "inventory": 45,
     "tags": [
       "dog",
@@ -2963,8 +2965,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Black",
     "inventory": 39,
     "tags": [
       "dog",
@@ -3002,8 +3004,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Black",
     "inventory": 33,
     "tags": [
       "dog",
@@ -3041,8 +3043,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Black",
     "inventory": 43,
     "tags": [
       "dog",
@@ -3080,8 +3082,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Black",
     "inventory": 34,
     "tags": [
       "dog",
@@ -3119,8 +3121,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Black",
     "inventory": 67,
     "tags": [
       "dog",
@@ -3158,8 +3160,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Black",
     "inventory": 39,
     "tags": [
       "dog",
@@ -3197,8 +3199,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Blue",
     "inventory": 43,
     "tags": [
       "dog",
@@ -3236,8 +3238,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Blue",
     "inventory": 64,
     "tags": [
       "dog",
@@ -3275,8 +3277,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Blue",
     "inventory": 58,
     "tags": [
       "dog",
@@ -3314,8 +3316,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Red",
     "inventory": 62,
     "tags": [
       "dog",
@@ -3353,8 +3355,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Red",
     "inventory": 50,
     "tags": [
       "dog",
@@ -3392,8 +3394,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Red",
     "inventory": 48,
     "tags": [
       "dog",
@@ -3431,8 +3433,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Small",
+    "color": "Orange",
     "inventory": 68,
     "tags": [
       "dog",
@@ -3470,8 +3472,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Medium",
+    "color": "Orange",
     "inventory": 27,
     "tags": [
       "dog",
@@ -3509,8 +3511,8 @@ export const PRODUCTS = [
       }
     ],
     "category": "Accessories",
-    "size": "One Size",
-    "color": "Mixed",
+    "size": "Large",
+    "color": "Orange",
     "inventory": 20,
     "tags": [
       "dog",

@@ -5,7 +5,7 @@ export default function Footer() {
 
     // Quick links
     const quickLinks = [
-        { name: 'Products', path: '/products' },
+        { name: 'Products', path: '/products?view=all' },
         { name: 'My Orders', path: '/orders' },
         { name: 'Cart', path: '/cart' },
     ];

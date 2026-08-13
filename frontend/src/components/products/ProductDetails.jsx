@@ -46,8 +46,8 @@ export default function ProductDetails() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [quantity, setQuantity] = useState(1);
-    const [selectedSize, setSelectedSize] = useState('Medium');
-    const [selectedColor, setSelectedColor] = useState('Plum');
+    const [selectedSize, setSelectedSize] = useState(currentProduct?.size || 'Small');
+    const [selectedColor, setSelectedColor] = useState(currentProduct?.color || '');
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     
     // Accordion states
@@ -103,25 +103,54 @@ export default function ProductDetails() {
         );
     }
 
-    const sizes = ['Small', 'Medium', 'Large'];
-    const colors = [
-        { name: 'Plum', hex: '#5C3975' },
-        { name: 'Gold', hex: '#CBB26A' },
-        { name: 'Charcoal', hex: '#1A1A2E' },
-        { name: 'Red', hex: '#E3342F' },
-        { name: 'Blue', hex: '#3490DC' },
-        { name: 'Black', hex: '#000000' },
-        { name: 'Brown', hex: '#8B4513' },
-        { name: 'Orange', hex: '#F6993F' },
-    ];
-    
-    // Attempt to match product color to our list, or default to Plum
-    const matchingColor = colors.find(c => currentProduct?.color?.toLowerCase() === c.name.toLowerCase()) || colors[0];
-    
-    const displayColors = [
-        matchingColor,
-        ...colors.filter(c => c.name !== matchingColor.name).slice(0, 3)
-    ];
+    // ── Derive sibling variants from PRODUCTS (same category + same base title root) ────
+    // Products are named like "VelvetFur Comfort Collar — Red | Small"
+    // We extract the base name (before " — " or " – ") to find siblings.
+    const getBaseName = (title) => title?.split(/\s[—–-]\s/)[0]?.trim() || title;
+    const baseProductName = getBaseName(currentProduct.title);
+
+    const siblingVariants = PRODUCTS.filter(
+        p => getBaseName(p.title) === baseProductName
+    );
+
+    // Available colors and sizes from actual sibling variants
+    const availableColors = [...new Set(siblingVariants.map(p => p.color).filter(Boolean))];
+    const availableSizes = [...new Set(siblingVariants.map(p => p.size).filter(Boolean))];
+
+    const COLOR_HEX_MAP = {
+        'Red': '#E3342F', 'Brown': '#8B4513', 'Black': '#000000',
+        'Orange': '#F6993F', 'Blue': '#3490DC', 'Gold': '#CBB26A',
+        'Plum': '#5C3975', 'Charcoal': '#1A1A2E', 'Purple': '#5C3975',
+        'Beige': '#F5F5DC', 'White': '#FFFFFF', 'Green': '#4CAF50',
+    };
+
+    // Find the currently displayed variant based on selected color + size
+    const activeVariant = siblingVariants.find(
+        p => p.color === selectedColor && p.size === selectedSize
+    ) || siblingVariants.find(
+        p => p.color === selectedColor
+    ) || currentProduct;
+
+    // ── Color selection: navigate to the matched color+currentSize variant ────
+    const handleColorSelect = (color) => {
+        setSelectedColor(color);
+        setActiveImageIndex(0);
+        const target = siblingVariants.find(p => p.color === color && p.size === selectedSize)
+            || siblingVariants.find(p => p.color === color);
+        if (target && target._id !== currentProduct._id) {
+            navigate(`/products/${target._id}`);
+        }
+    };
+
+    // ── Size selection: navigate to the matched size+currentColor variant ────
+    const handleSizeSelect = (size) => {
+        setSelectedSize(size);
+        const target = siblingVariants.find(p => p.size === size && p.color === selectedColor)
+            || siblingVariants.find(p => p.size === size);
+        if (target && target._id !== currentProduct._id) {
+            navigate(`/products/${target._id}`);
+        }
+    };
 
     const descriptionPoints = currentProduct.description?.split('. ').filter(Boolean) || [];
 
@@ -212,24 +241,9 @@ export default function ProductDetails() {
         setLocalReviews((prev) => prev.filter((r) => r.id !== id));
     };
 
-    // Dynamic Pricing Logic
-    const getDynamicPrice = () => {
-        const basePrice = currentProduct?.price || 0;
-        if (selectedSize === 'Medium') return Math.round(basePrice * 1.2);
-        if (selectedSize === 'Large') return Math.round(basePrice * 1.4);
-        return basePrice;
-    };
-    
-    const getDynamicComparePrice = () => {
-        if (!currentProduct?.compareAtPrice) return null;
-        const baseCompare = currentProduct.compareAtPrice;
-        if (selectedSize === 'Medium') return Math.round(baseCompare * 1.2);
-        if (selectedSize === 'Large') return Math.round(baseCompare * 1.4);
-        return baseCompare;
-    };
-
-    const currentDynamicPrice = getDynamicPrice();
-    const currentDynamicComparePrice = getDynamicComparePrice();
+    // Pricing: use the active variant's actual price from the catalog
+    const currentDynamicPrice = activeVariant?.price || currentProduct?.price || 0;
+    const currentDynamicComparePrice = activeVariant?.compareAtPrice || currentProduct?.compareAtPrice || null;
 
     const discountPercentage = currentDynamicComparePrice && currentDynamicComparePrice > currentDynamicPrice
         ? Math.round((1 - currentDynamicPrice / currentDynamicComparePrice) * 100)
@@ -313,21 +327,18 @@ export default function ProductDetails() {
                                 <div className="flex justify-between mb-3">
                                     <h4 className="text-sm font-bold font-sans text-charcoal">Color: <span className="font-normal text-charcoal/70">{selectedColor}</span></h4>
                                 </div>
-                                <div className="flex gap-3">
-                                    {displayColors.map((color, index) => (
+                                <div className="flex gap-3 flex-wrap">
+                                    {availableColors.map((color) => (
                                         <button
-                                            key={color.name}
-                                            onClick={() => {
-                                                setSelectedColor(color.name);
-                                                const newIndex = index < (currentProduct?.images?.length || 1) ? index : 0;
-                                                setActiveImageIndex(newIndex);
-                                            }}
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${selectedColor === color.name ? 'ring-2 ring-offset-2 ring-plum' : 'hover:scale-110 ring-1 ring-gray-200'}`}
-                                            style={{ backgroundColor: color.hex }}
-                                            aria-label={`Select color ${color.name}`}
+                                            key={color}
+                                            onClick={() => handleColorSelect(color)}
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${selectedColor === color ? 'ring-2 ring-offset-2 ring-plum scale-110' : 'hover:scale-110 ring-1 ring-gray-200'}`}
+                                            style={{ backgroundColor: COLOR_HEX_MAP[color] || '#888' }}
+                                            aria-label={`Select color ${color}`}
+                                            title={color}
                                         >
-                                            {selectedColor === color.name && (
-                                                <Check className={`w-4 h-4 ${color.name === 'White' || color.name === 'Gold' ? 'text-charcoal' : 'text-white'}`} />
+                                            {selectedColor === color && (
+                                                <Check className={`w-4 h-4 ${color === 'White' || color === 'Gold' || color === 'Beige' ? 'text-charcoal' : 'text-white'}`} />
                                             )}
                                         </button>
                                     ))}
@@ -341,19 +352,26 @@ export default function ProductDetails() {
                                         Size Guide
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-3 gap-3">
-                                    {sizes.map(size => (
-                                        <button
-                                            key={size}
-                                            onClick={() => setSelectedSize(size)}
-                                            className={`py-2.5 border rounded-lg font-sans font-semibold text-sm transition-all ${selectedSize === size
-                                                    ? 'border-plum bg-plum/5 text-plum ring-1 ring-plum'
-                                                    : 'border-gray-200 bg-white text-charcoal/70 hover:border-plum/50 hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
+                                <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(availableSizes.length, 4)}, 1fr)` }}>
+                                    {availableSizes.map(size => {
+                                        const sizeVariant = siblingVariants.find(p => p.size === size && p.color === selectedColor)
+                                            || siblingVariants.find(p => p.size === size);
+                                        return (
+                                            <button
+                                                key={size}
+                                                onClick={() => handleSizeSelect(size)}
+                                                className={`py-2.5 border rounded-lg font-sans font-semibold text-sm transition-all ${selectedSize === size
+                                                        ? 'border-plum bg-plum/5 text-plum ring-1 ring-plum'
+                                                        : 'border-gray-200 bg-white text-charcoal/70 hover:border-plum/50 hover:bg-gray-50'
+                                                    }`}
+                                            >
+                                                <span className="block">{size}</span>
+                                                {sizeVariant && (
+                                                    <span className="text-[10px] font-normal opacity-70">{formatPrice(sizeVariant.price)}</span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 

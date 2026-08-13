@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate as useNav } from 'react-router-dom';
 import { fetchProducts, fetchCategories, setFilters } from '@/features/productsSlice.js';
 import ProductCard from '@/components/products/ProductCard.jsx';
 import HeroBanner from '@/components/landing/HeroBanner.jsx';
@@ -23,7 +23,7 @@ const SORT_OPTIONS = [
 
 export default function ProductList() {
   const dispatch = useDispatch();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { items, categories, isLoading, error, filters } = useSelector((state) => state.products);
   // Local UI state
   const [showLanding, setShowLanding] = useState(true);

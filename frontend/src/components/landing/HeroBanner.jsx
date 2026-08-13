@@ -81,11 +81,11 @@ export default function HeroBanner({ onShopNow }) {
             )}
 
             {/* Hero Section */}
-            <div className="relative h-[400px] md:h-[500px] overflow-hidden">
+            <div className="relative min-h-[500px] md:min-h-[600px] overflow-hidden flex items-center">
                 {slides.map((slide, index) => (
                     <div
                         key={slide.id}
-                        className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${index === currentSlide ? 'opacity-100 z-0' : 'opacity-0 -z-10'}`}
+                        className={`absolute inset-0 transition-opacity duration-700 ease-in-out flex items-center ${index === currentSlide ? 'opacity-100 z-0' : 'opacity-0 -z-10'}`}
                     >
                         {/* Background Image */}
                         <div
@@ -93,24 +93,24 @@ export default function HeroBanner({ onShopNow }) {
                             style={{ backgroundImage: `url(${slide.image})` }}
                         >
                             {/* Gradient Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-plum/70 to-plum/30" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-plum/80 to-plum/40" />
                         </div>
 
                         {/* Content */}
-                        <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-                            <div className="max-w-2xl text-white py-[80px]">
-                                <div className="text-gold text-sm tracking-[0.2em] font-semibold uppercase mb-3 font-sans">
+                        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="max-w-2xl text-white">
+                                <div className="text-gold text-sm tracking-[0.2em] font-semibold uppercase mb-4 font-sans">
                                     Premium Pet Accessories
                                 </div>
-                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight font-serif">
+                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-[1.1] font-serif">
                                     {slide.title}
                                 </h1>
-                                <p className="text-lg md:text-xl lg:text-2xl mb-8 text-cream/90 font-sans">
+                                <p className="text-lg md:text-xl mb-10 text-cream/90 font-sans max-w-xl">
                                     {slide.subtitle}
                                 </p>
                                 <button
                                     onClick={onShopNow}
-                                    className="inline-block px-8 py-3 bg-gold hover:bg-[#b89d5a] text-plum text-base md:text-lg font-bold rounded-full transition-transform duration-200 hover:scale-[1.02] active:scale-[0.97] shadow-lg shadow-plum/20"
+                                    className="inline-block px-10 py-4 bg-gold hover:bg-[#b89d5a] text-plum text-base md:text-lg font-bold rounded-full transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] shadow-xl shadow-plum/20"
                                 >
                                     {slide.cta}
                                 </button>

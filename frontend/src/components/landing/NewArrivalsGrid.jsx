@@ -17,7 +17,7 @@ function getMockReviewCount(title = '') {
 // ─── Skeleton card — only shown on first cold-load ────────────────────────────
 function SkeletonCard() {
   return (
-    <div className="flex-shrink-0 w-[220px] sm:w-[240px] md:w-[260px]">
+    <div className="w-full">
       <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-blush/30">
         <div className="aspect-square bg-blush/30 animate-pulse" />
         <div className="p-4 space-y-2.5">
@@ -72,7 +72,7 @@ function NewArrivalCard({ product }) {
 
   return (
     <div
-      className="flex-shrink-0 w-[220px] sm:w-[240px] md:w-[260px]"
+      className="w-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -211,8 +211,6 @@ function NewArrivalCard({ product }) {
 // showSkeleton is ONLY driven by products being empty — not by isLoading —
 // so re-fetches in the background never flash skeletons over loaded data.
 export default function NewArrivalsGrid({ products = [], isLoading = false, onBrowseAll }) {
-  const [scrollIndex, setScrollIndex] = useState(0);
-
   const newArrivals = [...products]
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     .slice(0, 8);
@@ -222,13 +220,6 @@ export default function NewArrivalsGrid({ products = [], isLoading = false, onBr
   const showSkeleton = newArrivals.length === 0 && isLoading;
   // If products are 0 and NOT loading, the store returned empty — still show section.
   const isEmpty = newArrivals.length === 0 && !isLoading;
-
-  const CARD_WIDTH = 276; // px — w-[260px] + gap-4 (16px)
-  const canPrev = scrollIndex > 0;
-  const canNext = scrollIndex < newArrivals.length - 1;
-
-  const handlePrev = () => setScrollIndex((i) => Math.max(0, i - 2));
-  const handleNext = () => setScrollIndex((i) => Math.min(newArrivals.length - 1, i + 2));
 
   return (
     <section className="py-14 lg:py-20 bg-cream">
@@ -248,33 +239,8 @@ export default function NewArrivalsGrid({ products = [], isLoading = false, onBr
             </p>
           </div>
 
-          {/* Nav arrows + View All — always visible (disabled when skeleton) */}
+          {/* View All */}
           <div className="hidden md:flex items-center gap-2">
-            <button
-              onClick={handlePrev}
-              disabled={!canPrev || showSkeleton}
-              aria-label="Scroll left"
-              className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-200 ${
-                canPrev && !showSkeleton
-                  ? 'border-plum/30 text-plum hover:bg-plum hover:text-white hover:border-plum'
-                  : 'border-blush/50 text-charcoal/20 cursor-not-allowed'
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={!canNext || showSkeleton}
-              aria-label="Scroll right"
-              className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-200 ${
-                canNext && !showSkeleton
-                  ? 'border-plum/30 text-plum hover:bg-plum hover:text-white hover:border-plum'
-                  : 'border-blush/50 text-charcoal/20 cursor-not-allowed'
-              }`}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-
             <button
               onClick={onBrowseAll}
               className="inline-flex items-center gap-1.5 text-sm font-sans font-semibold text-plum hover:text-gold transition-colors duration-200 ml-3"
@@ -286,9 +252,9 @@ export default function NewArrivalsGrid({ products = [], isLoading = false, onBr
         </div>
 
         {/* ── Cards ── */}
-        <div className="overflow-hidden">
+        <div className="w-full">
           {showSkeleton ? (
-            <div className="flex gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : isEmpty ? (
@@ -303,10 +269,7 @@ export default function NewArrivalsGrid({ products = [], isLoading = false, onBr
               </button>
             </div>
           ) : (
-            <div
-              className="flex gap-4 transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(calc(-${scrollIndex} * ${CARD_WIDTH}px))` }}
-            >
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {newArrivals.map((product) => (
                 <NewArrivalCard key={product._id} product={product} />
               ))}

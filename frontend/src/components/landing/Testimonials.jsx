@@ -123,7 +123,7 @@ export default function Testimonials() {
 
       {/* ── Background Image + Plum Overlay (unchanged) ── */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-fixed"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('https://images.unsplash.com/photo-1544568100-847a948585b9?w=1920&h=1080&fit=crop')" }}
       >
         <div className="absolute inset-0 bg-plum/85 mix-blend-multiply" />
@@ -163,7 +163,7 @@ export default function Testimonials() {
             {reviews.map((review) => (
               <div
                 key={review.id}
-                className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-xl relative group transition-all duration-300 hover:bg-white/90"
+                className="bg-white rounded-2xl p-8 shadow-xl relative group transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
               >
                 {/* Big quote icon (decorative) */}
                 <Quote className="absolute top-6 right-6 w-10 h-10 text-plum/10" />

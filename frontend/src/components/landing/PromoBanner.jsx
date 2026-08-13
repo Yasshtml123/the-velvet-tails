@@ -13,7 +13,7 @@ export default function PromoBanner({ onShopNow }) {
       <div className="flex flex-col lg:flex-row min-h-[420px]">
 
         {/* ── Left: Brand copy panel ─────────────────────────────────────── */}
-        <div className="relative flex-1 bg-plum flex items-center justify-center py-16 px-8 lg:px-14 overflow-hidden">
+        <div className="relative w-full lg:w-1/2 flex-shrink-0 bg-plum flex items-center justify-center py-16 px-8 lg:px-14 overflow-hidden">
 
           {/* Decorative circles */}
           <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/5 pointer-events-none" />
@@ -72,7 +72,7 @@ export default function PromoBanner({ onShopNow }) {
         </div>
 
         {/* ── Right: Atmospheric photo panel ────────────────────────────── */}
-        <div className="relative flex-1 min-h-[280px] lg:min-h-0 overflow-hidden">
+        <div className="relative w-full lg:w-1/2 min-h-[300px] lg:min-h-0 overflow-hidden flex-shrink-0">
           {/* Photo */}
           <img
             src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=900&h=600&fit=crop"

@@ -31,12 +31,12 @@ export default function CategoryShowcase() {
                 </div>
 
                 {/* Grid */}
-                <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 justify-items-center">
                     {categoriesWithCount.map((category, index) => (
                         <Link
                             key={category.name}
                             to={`/products?category=${encodeURIComponent(category.name)}`}
-                            className="w-[calc(50%-8px)] sm:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] group bg-white border border-blush/40 rounded-2xl p-3 sm:p-4 block transition-all duration-300 hover:shadow-lg hover:border-plum/40 animate-fade-in-slide-up"
+                            className="w-full group bg-white border border-blush/40 rounded-2xl p-3 sm:p-4 block transition-all duration-300 hover:shadow-lg hover:border-plum/40 animate-fade-in-slide-up"
                             style={{ animationDelay: `${index * 40}ms` }}
                         >
                             {/* Aspect Ratio Container */}

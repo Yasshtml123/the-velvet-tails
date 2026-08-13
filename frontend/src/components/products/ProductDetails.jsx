@@ -50,6 +50,16 @@ export default function ProductDetails() {
     const [selectedColor, setSelectedColor] = useState(currentProduct?.color || '');
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     
+    // When navigating between variants (since the route is the same component), 
+    // we must sync the UI state to match the newly loaded product.
+    useEffect(() => {
+        if (currentProduct) {
+            setSelectedSize(currentProduct.size || 'Small');
+            setSelectedColor(currentProduct.color || '');
+            setActiveImageIndex(0);
+        }
+    }, [currentProduct?._id]);
+    
     // Accordion states
     const [openAccordion, setOpenAccordion] = useState('description');
 

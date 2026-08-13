@@ -221,9 +221,9 @@ export default function ProductList() {
           
           <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
             
-            {/* ── Left Sidebar ── */}
-            <div className="hidden lg:block">
-            <div className="bg-white border border-blush/60 rounded-2xl p-6 shadow-sm sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto">
+            {/* ── Left Sidebar (Filters) ── */}
+            <div className="w-full">
+            <div className="bg-white border border-blush/60 rounded-2xl p-6 shadow-sm lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-serif font-bold text-lg text-plum">Filters</h2>
                 <button onClick={handleClearAllFilters} className="text-xs font-sans font-semibold text-charcoal/50 hover:text-plum transition-colors underline underline-offset-2">

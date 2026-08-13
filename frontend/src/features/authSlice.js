@@ -42,7 +42,10 @@ export const logout = createAsyncThunk(
     try {
       await api.post('/auth/logout');
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
     } catch (error) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
       return rejectWithValue(error.response?.data?.error || 'Logout failed');
     }
   }
@@ -73,8 +76,8 @@ export const resendVerification = createAsyncThunk(
 );
 
 const initialState = {
-  user: null,
-  isAuthenticated: false,
+  user: JSON.parse(localStorage.getItem('user')) || null,
+  isAuthenticated: !!localStorage.getItem('accessToken'),
   isLoading: false,
   error: null,
   isInitialized: false,
@@ -108,6 +111,9 @@ const authSlice = createSlice({
       if (action.payload.accessToken) {
         localStorage.setItem('accessToken', action.payload.accessToken);
       }
+      if (action.payload.user) {
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
+      }
     }
   },
   extraReducers: (builder) => {
@@ -132,6 +138,9 @@ const authSlice = createSlice({
           state.isAuthenticated = true;
           state.user = action.payload.user;
           state.isInitialized = true;
+          if (action.payload.user) {
+            localStorage.setItem('user', JSON.stringify(action.payload.user));
+          }
         }
       })
       .addCase(register.rejected, (state, action) => {
@@ -151,6 +160,9 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.isInitialized = true;
+        if (action.payload.user) {
+          localStorage.setItem('user', JSON.stringify(action.payload.user));
+        }
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -168,6 +180,7 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
+        localStorage.removeItem('user');
       });
 
     // Get current user
@@ -180,12 +193,17 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload;
         state.isInitialized = true;
+        if (action.payload) {
+          localStorage.setItem('user', JSON.stringify(action.payload));
+        }
       })
       .addCase(getCurrentUser.rejected, (state) => {
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
         state.isInitialized = true;
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
       });
 
     // Resend verification

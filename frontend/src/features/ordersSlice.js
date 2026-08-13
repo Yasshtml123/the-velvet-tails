@@ -19,8 +19,10 @@ export const fetchOrders = createAsyncThunk(
     async (status = null, { rejectWithValue }) => {
         try {
             const url = status ? `/orders?status=${status}` : '/orders';
-            const { data } = await api.get(url);
-            return data.orders;
+            const token = localStorage.getItem('accessToken');
+            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+            const { data } = await api.get(url, config);
+            return data.orders || [];
         } catch (error) {
             return rejectWithValue(error.response?.data?.error || 'Failed to fetch orders');
         }

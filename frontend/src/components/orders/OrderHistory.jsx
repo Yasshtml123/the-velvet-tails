@@ -33,6 +33,8 @@ export default function OrderHistory() {
         );
     }
 
+    const safeOrders = Array.isArray(orders) ? orders : [];
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">My Orders</h1>
@@ -46,7 +48,7 @@ export default function OrderHistory() {
                 </div>
             )}
 
-            {orders.length === 0 ? (
+            {safeOrders.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
                     <p className="text-gray-600 mb-4">You haven't placed any orders yet</p>
                     <button
@@ -58,7 +60,7 @@ export default function OrderHistory() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {orders.map((order) => (
+                    {safeOrders.map((order) => (
                         <div key={order._id} className="bg-white shadow-md rounded-lg overflow-hidden">
                             <div className="p-6">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">

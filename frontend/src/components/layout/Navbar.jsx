@@ -153,7 +153,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await dispatch(logout());
-    navigate('/login');
+    navigate('/');
     setMobileMenuOpen(false);
   };
 

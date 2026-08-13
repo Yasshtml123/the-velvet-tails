@@ -45,13 +45,20 @@ export default function ProductDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
+
+    // ── currentProduct must be looked up FIRST so initial useState values are correct ──
+    const currentProduct = findProduct(id);
+
+    const { user } = useSelector((state) => state.auth || {});
+    const isAdmin = user?.role === 'admin';
+
+    // ── All hooks MUST be declared unconditionally before any early returns ──────
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState(currentProduct?.size || 'Small');
     const [selectedColor, setSelectedColor] = useState(currentProduct?.color || '');
     const [activeImageIndex, setActiveImageIndex] = useState(0);
-    
-    // When navigating between variants (since the route is the same component), 
-    // we must sync the UI state to match the newly loaded product.
+
+    // Sync UI state when navigating between variants (same component, different :id)
     useEffect(() => {
         if (currentProduct) {
             setSelectedSize(currentProduct.size || 'Small');
@@ -59,7 +66,7 @@ export default function ProductDetails() {
             setActiveImageIndex(0);
         }
     }, [currentProduct?._id]);
-    
+
     // Accordion states
     const [openAccordion, setOpenAccordion] = useState('description');
 
@@ -70,100 +77,7 @@ export default function ProductDetails() {
     const [reviewsLoading, setReviewsLoading] = useState(false);
     const [submitError, setSubmitError] = useState(null);
 
-    const currentProduct = findProduct(id);
-
-    const { user } = useSelector((state) => state.auth || {});
-    const isAdmin = user?.role === 'admin';
-
-    const handleQuantityChange = (newQuantity) => {
-        if (newQuantity < 1) return;
-        if (currentProduct && newQuantity > currentProduct.inventory) {
-            alert(`Only ${currentProduct.inventory} items available`);
-            return;
-        }
-        setQuantity(newQuantity);
-    };
-
-    const handleAddToCart = () => {
-        if (!currentProduct || !currentProduct?._id) return;
-        dispatch(addToCart({ product: currentProduct, quantity }));
-    };
-
-    const handleBuyNow = () => {
-        handleAddToCart();
-        navigate('/checkout');
-    };
-
-    const toggleAccordion = (section) => {
-        setOpenAccordion(openAccordion === section ? null : section);
-    };
-
-    if (!currentProduct) {
-        return (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-                <h1 className="text-3xl font-bold font-serif text-charcoal mb-4">Product Not Found</h1>
-                <p className="text-charcoal/60 font-sans mb-8">The product you're looking for doesn't exist.</p>
-                <button
-                    onClick={() => navigate('/products')}
-                    className="px-6 py-3 bg-plum text-white rounded-full hover:bg-plum/90 font-sans font-medium transition-colors"
-                >
-                    Back to Products
-                </button>
-            </div>
-        );
-    }
-
-    // ── Derive sibling variants from PRODUCTS (same category + same base title root) ────
-    // Products are named like "VelvetFur Comfort Collar — Red | Small"
-    // We extract the base name (before " — " or " – ") to find siblings.
-    const getBaseName = (title) => title?.split(/\s[—–-]\s/)[0]?.trim() || title;
-    const baseProductName = getBaseName(currentProduct.title);
-
-    const siblingVariants = PRODUCTS.filter(
-        p => getBaseName(p.title) === baseProductName
-    );
-
-    // Available colors and sizes from actual sibling variants
-    const availableColors = [...new Set(siblingVariants.map(p => p.color).filter(Boolean))];
-    const availableSizes = [...new Set(siblingVariants.map(p => p.size).filter(Boolean))];
-
-    const COLOR_HEX_MAP = {
-        'Red': '#E3342F', 'Brown': '#8B4513', 'Black': '#000000',
-        'Orange': '#F6993F', 'Blue': '#3490DC', 'Gold': '#CBB26A',
-        'Plum': '#5C3975', 'Charcoal': '#1A1A2E', 'Purple': '#5C3975',
-        'Beige': '#F5F5DC', 'White': '#FFFFFF', 'Green': '#4CAF50',
-    };
-
-    // Find the currently displayed variant based on selected color + size
-    const activeVariant = siblingVariants.find(
-        p => p.color === selectedColor && p.size === selectedSize
-    ) || siblingVariants.find(
-        p => p.color === selectedColor
-    ) || currentProduct;
-
-    // ── Color selection: navigate to the matched color+currentSize variant ────
-    const handleColorSelect = (color) => {
-        setSelectedColor(color);
-        setActiveImageIndex(0);
-        const target = siblingVariants.find(p => p.color === color && p.size === selectedSize)
-            || siblingVariants.find(p => p.color === color);
-        if (target && target._id !== currentProduct._id) {
-            navigate(`/products/${target._id}`);
-        }
-    };
-
-    // ── Size selection: navigate to the matched size+currentColor variant ────
-    const handleSizeSelect = (size) => {
-        setSelectedSize(size);
-        const target = siblingVariants.find(p => p.size === size && p.color === selectedColor)
-            || siblingVariants.find(p => p.size === size);
-        if (target && target._id !== currentProduct._id) {
-            navigate(`/products/${target._id}`);
-        }
-    };
-
-    const descriptionPoints = currentProduct.description?.split('. ').filter(Boolean) || [];
-
+    // Reviews state — must live here (before early return) to satisfy Rules of Hooks
     const [localReviews, setLocalReviews] = useState([]);
 
     // ── Fetch reviews from Supabase on mount ──────────────────────────────────
@@ -194,6 +108,30 @@ export default function ProductDetails() {
         };
         fetchReviews();
     }, [currentProduct?._id]);
+
+    // ── Handler functions ────────────────────────────────────────────────────
+    const handleQuantityChange = (newQuantity) => {
+        if (newQuantity < 1) return;
+        if (currentProduct && newQuantity > currentProduct.inventory) {
+            alert(`Only ${currentProduct.inventory} items available`);
+            return;
+        }
+        setQuantity(newQuantity);
+    };
+
+    const handleAddToCart = () => {
+        if (!currentProduct || !currentProduct?._id) return;
+        dispatch(addToCart({ product: currentProduct, quantity }));
+    };
+
+    const handleBuyNow = () => {
+        handleAddToCart();
+        navigate('/checkout');
+    };
+
+    const toggleAccordion = (section) => {
+        setOpenAccordion(openAccordion === section ? null : section);
+    };
 
     const closeForm = () => {
         setShowReviewModal(false);
@@ -250,6 +188,71 @@ export default function ProductDetails() {
     const handleDeleteReview = (id) => {
         setLocalReviews((prev) => prev.filter((r) => r.id !== id));
     };
+
+    // ── Early return AFTER all hooks ─────────────────────────────────────────
+    if (!currentProduct) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+                <h1 className="text-3xl font-bold font-serif text-charcoal mb-4">Product Not Found</h1>
+                <p className="text-charcoal/60 font-sans mb-8">The product you're looking for doesn't exist.</p>
+                <button
+                    onClick={() => navigate('/products')}
+                    className="px-6 py-3 bg-plum text-white rounded-full hover:bg-plum/90 font-sans font-medium transition-colors"
+                >
+                    Back to Products
+                </button>
+            </div>
+        );
+    }
+
+    // ── Derive sibling variants from PRODUCTS (same base title root) ─────────
+    const getBaseName = (title) => title?.split(/\s[—–-]\s/)[0]?.trim() || title;
+    const baseProductName = getBaseName(currentProduct.title);
+
+    const siblingVariants = PRODUCTS.filter(
+        p => getBaseName(p.title) === baseProductName
+    );
+
+    // Available colors and sizes from actual sibling variants
+    const availableColors = [...new Set(siblingVariants.map(p => p.color).filter(Boolean))];
+    const availableSizes = [...new Set(siblingVariants.map(p => p.size).filter(Boolean))];
+
+    const COLOR_HEX_MAP = {
+        'Red': '#E3342F', 'Brown': '#8B4513', 'Black': '#000000',
+        'Orange': '#F6993F', 'Blue': '#3490DC', 'Gold': '#CBB26A',
+        'Plum': '#5C3975', 'Charcoal': '#1A1A2E', 'Purple': '#5C3975',
+        'Beige': '#F5F5DC', 'White': '#FFFFFF', 'Green': '#4CAF50',
+    };
+
+    // Find the currently displayed variant based on selected color + size
+    const activeVariant = siblingVariants.find(
+        p => p.color === selectedColor && p.size === selectedSize
+    ) || siblingVariants.find(
+        p => p.color === selectedColor
+    ) || currentProduct;
+
+    // ── Color selection: navigate to the matched color+currentSize variant ────
+    const handleColorSelect = (color) => {
+        setSelectedColor(color);
+        setActiveImageIndex(0);
+        const target = siblingVariants.find(p => p.color === color && p.size === selectedSize)
+            || siblingVariants.find(p => p.color === color);
+        if (target && target._id !== currentProduct._id) {
+            navigate(`/products/${target._id}`);
+        }
+    };
+
+    // ── Size selection: navigate to the matched size+currentColor variant ────
+    const handleSizeSelect = (size) => {
+        setSelectedSize(size);
+        const target = siblingVariants.find(p => p.size === size && p.color === selectedColor)
+            || siblingVariants.find(p => p.size === size);
+        if (target && target._id !== currentProduct._id) {
+            navigate(`/products/${target._id}`);
+        }
+    };
+
+    const descriptionPoints = currentProduct.description?.split('. ').filter(Boolean) || [];
 
     // Pricing: use the active variant's actual price from the catalog
     const currentDynamicPrice = activeVariant?.price || currentProduct?.price || 0;

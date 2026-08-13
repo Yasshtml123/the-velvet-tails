@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSearchParams, useNavigate as useNav } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { fetchProducts, fetchCategories, setFilters } from '@/features/productsSlice.js';
 import ProductCard from '@/components/products/ProductCard.jsx';
 import HeroBanner from '@/components/landing/HeroBanner.jsx';

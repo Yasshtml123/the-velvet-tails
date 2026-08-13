@@ -36,7 +36,6 @@ export default function ProductList() {
   const [priceRange, setPriceRange] = useState([200, 2500]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
-  const [selectedMaterials, setSelectedMaterials] = useState([]);
   const [selectedRating, setSelectedRating] = useState(null);
   const [availability, setAvailability] = useState('All');
 
@@ -47,7 +46,6 @@ export default function ProductList() {
     'Red': 'bg-red-500', 'Brown': 'bg-amber-800', 'Black': 'bg-black',
     'Purple': 'bg-velvet-purple', 'Beige': 'bg-[#F5F5DC]', 'Blue': 'bg-blue-500'
   };
-  const MATERIALS = ['Velvet', 'Leather', 'Nylon'];
 
   // Read category AND search from URL params whenever the URL changes
   useEffect(() => {
@@ -106,7 +104,6 @@ export default function ProductList() {
     setPriceRange([200, 2500]);
     setSelectedSizes([]);
     setSelectedColors([]);
-    setSelectedMaterials([]);
     setSelectedRating(null);
     setAvailability('All');
     dispatch(setFilters({ category: null, search: null }));
@@ -147,14 +144,6 @@ export default function ProductList() {
       result = result.filter(p => selectedColors.includes(p.color));
     }
 
-    // 4. Material
-    if (selectedMaterials.length > 0) {
-      result = result.filter(p => {
-        const text = `${p.title} ${p.description} ${(p.tags || []).join(' ')}`.toLowerCase();
-        return selectedMaterials.some(m => text.includes(m.toLowerCase()));
-      });
-    }
-
     // 5. Rating
     if (selectedRating !== null) {
       result = result.filter(p => {
@@ -180,7 +169,7 @@ export default function ProductList() {
     }
 
     return result;
-  }, [items, sortBy, petType, priceRange, selectedSizes, selectedColors, selectedMaterials, selectedRating, availability]);
+  }, [items, sortBy, petType, priceRange, selectedSizes, selectedColors, selectedRating, availability]);
 
   return (
     <div className="min-h-screen">
@@ -303,27 +292,6 @@ export default function ProductList() {
                       >
                         {selectedColors.includes(color) && <Check className={`w-3.5 h-3.5 mx-auto ${color === 'Beige' ? 'text-charcoal' : 'text-white'}`} />}
                       </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Material */}
-                <div className="pt-6">
-                  <h3 className="font-sans font-semibold text-sm text-charcoal mb-3">Material</h3>
-                  <div className="space-y-2.5">
-                    {MATERIALS.map(material => (
-                      <label key={material} className="flex items-center gap-3 cursor-pointer group">
-                        <input 
-                          type="checkbox" 
-                          className="hidden" 
-                          checked={selectedMaterials.includes(material)}
-                          onChange={() => toggleArrayItem(selectedMaterials, setSelectedMaterials, material)}
-                        />
-                        <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${selectedMaterials.includes(material) ? 'bg-plum border-plum text-white' : 'border-charcoal/30 bg-white group-hover:border-plum/50'}`}>
-                          {selectedMaterials.includes(material) && <Check className="w-3 h-3" />}
-                        </div>
-                        <span className="text-sm font-sans text-charcoal/80 group-hover:text-charcoal transition-colors">{material}</span>
-                      </label>
                     ))}
                   </div>
                 </div>

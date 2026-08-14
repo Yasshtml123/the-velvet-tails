@@ -50,6 +50,13 @@ api.interceptors.response.use(
 
     // If 401 and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Only attempt a token refresh when the original request was authenticated
+      // (i.e., it carried a Bearer token). If it had no token, the 401 is
+      // expected — attempting refresh here causes the logout re-login loop.
+      const wasAuthenticated = !!originalRequest.headers?.Authorization;
+      if (!wasAuthenticated) {
+        return Promise.reject(error);
+      }
       if (isRefreshing) {
         // Queue this request
         return new Promise((resolve, reject) => {

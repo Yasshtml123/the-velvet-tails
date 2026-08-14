@@ -1,7 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { getCurrentUser } from '@/features/authSlice.js';
+import { getCurrentUser, setInitialized } from '@/features/authSlice.js';
 
 // Always load Navbar (needed immediately)
 import Navbar from '@/components/layout/Navbar.jsx';
@@ -54,7 +54,15 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getCurrentUser());
+    const storedToken = localStorage.getItem('accessToken');
+    if (storedToken) {
+      // Token present — verify it with the server and restore the session
+      dispatch(getCurrentUser());
+    } else {
+      // No token — user is definitely logged out; skip the network call
+      // that would otherwise trigger the refresh-cookie re-login loop.
+      dispatch(setInitialized());
+    }
   }, [dispatch]);
 
   return (

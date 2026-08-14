@@ -238,12 +238,14 @@ router.post('/login', async (req, res) => {
 
 router.post('/logout', async (req, res) => {
   try {
-    // clear using same flags so browsers clear properly
     const isProd = process.env.NODE_ENV === 'production';
+    // path: '/' must match the path used when the cookie was set (Express default).
+    // Without the exact path match, browsers silently ignore the clear instruction.
     res.clearCookie('refreshToken', {
       httpOnly: true,
       sameSite: isProd ? 'none' : 'lax',
-      secure: isProd
+      secure: isProd,
+      path: '/'
     });
     res.json({ ok: true, message: 'Logged out successfully' });
   } catch (err) {

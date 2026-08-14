@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/config/firebase.js';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, onSnapshot } from 'firebase/firestore';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { findProduct, PRODUCTS } from '@/data/products.js';
@@ -84,32 +84,35 @@ export default function ProductDetails() {
     // ── Fetch reviews from Firestore on mount ──────────────────────────────────
     useEffect(() => {
         if (!currentProduct?._id) return;
-        const fetchReviews = async () => {
-            setReviewsLoading(true);
-            try {
-                const q = query(
-                    collection(db, 'reviews'), 
-                    where('productId', '==', currentProduct._id)
-                );
-                const snapshot = await getDocs(q);
-                
-                const fetchedReviews = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                    // Firestore timestamps need to be converted to readable date if necessary, 
-                    // or just rely on the stored date string
-                }));
+        
+        setReviewsLoading(true);
+        const q = query(
+            collection(db, 'reviews'), 
+            where('productId', '==', currentProduct._id)
+        );
 
-                // Sort descending by date (basic client side sort to avoid requiring composite indexes immediately)
-                fetchedReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-                setLocalReviews(fetchedReviews);
-            } catch (error) {
-                console.error("Failed to fetch reviews from Firestore:", error);
-            } finally {
-                setReviewsLoading(false);
-            }
-        };
-        fetchReviews();
+        // Use onSnapshot for realtime persistent loading
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedReviews = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    // Map the requested 'comment' field to the UI's 'text' expectation
+                    text: data.comment || data.text,
+                };
+            });
+
+            // Sort descending by date
+            fetchedReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setLocalReviews(fetchedReviews);
+            setReviewsLoading(false);
+        }, (error) => {
+            console.error("Failed to fetch reviews from Firestore:", error);
+            setReviewsLoading(false);
+        });
+
+        return () => unsubscribe();
     }, [currentProduct?._id]);
 
     // ── Handler functions ────────────────────────────────────────────────────
@@ -169,7 +172,7 @@ export default function ProductDetails() {
                 date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
                 rating: Number(reviewForm.rating),
                 verified: true,
-                text: reviewForm.text.trim(),
+                comment: reviewForm.text.trim(), // Storing as 'comment' per request
                 isUserSubmitted: true,
                 userId: user._id
             };

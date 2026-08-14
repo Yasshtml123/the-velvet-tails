@@ -84,19 +84,55 @@ if (process.env.NODE_ENV === 'production') {
 // CORS configuration
 const FRONT = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+// Build the set of allowed origins robustly:
+// In production we accept the exact FRONTEND_URL *and* its www/non-www counterpart.
+// In development we also accept the common Vite ports.
+const buildAllowedOrigins = () => {
+  const origins = new Set();
+
+  // Always allow localhost ports for local dev
+  origins.add('http://localhost:5173');
+  origins.add('http://localhost:5174');
+  origins.add('http://localhost:3000');
+
+  if (FRONT) {
+    origins.add(FRONT);
+    // Also allow www <-> non-www sibling
+    try {
+      const u = new URL(FRONT);
+      if (u.hostname.startsWith('www.')) {
+        origins.add(`${u.protocol}//${u.hostname.slice(4)}${u.port ? ':' + u.port : ''}`);
+      } else {
+        origins.add(`${u.protocol}//www.${u.hostname}${u.port ? ':' + u.port : ''}`);
+      }
+    } catch (_) { /* ignore malformed URL */ }
+  }
+
+  return origins;
+};
+
+const allowedOrigins = buildAllowedOrigins();
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? FRONT  // Production: only allow the exact frontend URL from env
-    : [      // Development: allow multiple localhost ports for flexibility
-      'http://localhost:5173',
-      'http://localhost:5174',
-      FRONT
-    ],
+  origin: (origin, callback) => {
+    // Allow server-to-server (no origin header) and known origins
+    if (!origin || allowedOrigins.has(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error(`CORS policy: origin ${origin} is not allowed`));
+    }
+  },
   credentials: true,
-  optionsSuccessStatus: 200
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['X-Request-ID'],
+  optionsSuccessStatus: 200  // IE11 compatibility
 };
 
 app.use(cors(corsOptions));
+// Explicitly handle OPTIONS preflight for all routes
+app.options('*', cors(corsOptions));
 
 
 app.use(express.static('public'));

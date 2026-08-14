@@ -12,10 +12,10 @@ import mongoose from 'mongoose';
 
 const router = express.Router();
 
-// All order routes require authentication
-// router.use(authenticate);
+// Note: authenticate is applied per-route below (not router-level)
+// because PayU payment callbacks also hit this router without auth headers.
 
-router.post('/', async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
     const { items, shippingAddress, discountCode, shippingCost = 0 } = req.body;
     const shippingCostPaise = Math.round(shippingCost * 100);
@@ -107,7 +107,7 @@ router.post('/', async (req, res) => {
       // Async increment discount usage
       await Discount.findByIdAndUpdate(discountDoc._id, {
         $inc: { usedCount: 1 },
-        $addToSet: { usedBy: req.user?._id || new mongoose.Types.ObjectId() }
+        $addToSet: { usedBy: req.user._id }
       });
     }
 
@@ -132,7 +132,7 @@ router.post('/', async (req, res) => {
 
     // --- Step 5: Create Order Document ---
     const order = await Order.create({
-      userId: req.user?._id || new mongoose.Types.ObjectId(),
+      userId: req.user._id,
       items: orderItems,
       subtotal,
       discount,
@@ -178,11 +178,11 @@ router.post('/', async (req, res) => {
   }
 });
 
-// --- GET /api/orders ---
-router.get('/', async (req, res) => {
+// --- GET /api/orders --- (requires authentication)
+router.get('/', authenticate, async (req, res) => {
   try {
     const { status } = req.query;
-    const query = { userId: req.user?._id || new mongoose.Types.ObjectId() };
+    const query = { userId: req.user._id };
 
     if (status) {
       const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];

@@ -1,14 +1,25 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
+    const navigate = useNavigate();
+    const { isAuthenticated } = useSelector((state) => state.auth);
 
     // Quick links
     const quickLinks = [
         { name: 'Products', path: '/products?view=all' },
-        { name: 'My Orders', path: '/orders' },
         { name: 'Cart', path: '/cart' },
     ];
+
+    const handleMyOrdersClick = (e) => {
+        e.preventDefault();
+        if (isAuthenticated) {
+            navigate('/orders');
+        } else {
+            navigate('/login', { state: { from: { pathname: '/orders' } } });
+        }
+    };
 
     // Policy links - these will open modals or navigate to policy pages
     const policyLinks = [
@@ -76,6 +87,16 @@ export default function Footer() {
                                     </Link>
                                 </li>
                             ))}
+                            {/* Auth-aware My Orders link */}
+                            <li>
+                                <a
+                                    href="/orders"
+                                    onClick={handleMyOrdersClick}
+                                    className="text-gray-400 hover:text-white transition-colors text-sm cursor-pointer"
+                                >
+                                    My Orders
+                                </a>
+                            </li>
                         </ul>
                     </div>
 

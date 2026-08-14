@@ -120,8 +120,8 @@ export default function ProductDetails() {
     };
 
     const handleAddToCart = () => {
-        if (!currentProduct || !currentProduct?._id) return;
-        dispatch(addToCart({ product: currentProduct, quantity }));
+        if (!activeVariant || !activeVariant?._id) return;
+        dispatch(addToCart({ product: activeVariant, quantity }));
     };
 
     const handleBuyNow = () => {
@@ -213,9 +213,16 @@ export default function ProductDetails() {
         p => getBaseName(p.title) === baseProductName
     );
 
-    // Available colors and sizes from actual sibling variants
+    // Available colors and size objects from actual sibling variants
     const availableColors = [...new Set(siblingVariants.map(p => p.color).filter(Boolean))];
-    const availableSizes = [...new Set(siblingVariants.map(p => p.size).filter(Boolean))];
+    const availableSizes = [...new Set(siblingVariants.map(p => p.size).filter(Boolean))].map(sizeName => {
+        const variantForSize = siblingVariants.find(p => p.size === sizeName && p.color === selectedColor) 
+                            || siblingVariants.find(p => p.size === sizeName);
+        return {
+            size: sizeName,
+            price: variantForSize ? variantForSize.price : currentProduct.price
+        };
+    });
 
     const COLOR_HEX_MAP = {
         'Red': '#E3342F', 'Brown': '#8B4513', 'Black': '#000000',
@@ -297,7 +304,7 @@ export default function ProductDetails() {
                 {/* Image Gallery */}
                 <div className="lg:col-span-7 relative">
                     <ImageGallery 
-                        images={currentProduct?.images || []} 
+                        images={activeVariant?.images || currentProduct?.images || []} 
                         activeIndex={activeImageIndex} 
                         onIndexChange={setActiveImageIndex} 
                     />
@@ -308,7 +315,7 @@ export default function ProductDetails() {
                     {/* Header & Pricing */}
                     <div className="border-b border-blush/40 pb-6">
                         <p className="text-sm font-sans font-bold text-sage uppercase tracking-wider mb-2">{currentProduct?.category}</p>
-                        <h1 className="text-2xl md:text-3xl font-bold font-serif text-charcoal mb-3 leading-tight">{currentProduct?.title}</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold font-serif text-charcoal mb-3 leading-tight">{activeVariant?.title || currentProduct?.title}</h1>
                         
                         <div className="flex items-center gap-4 mb-4 flex-wrap">
                             <div className="flex items-center gap-1">
@@ -373,22 +380,18 @@ export default function ProductDetails() {
                                     </button>
                                 </div>
                                 <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(availableSizes.length, 4)}, 1fr)` }}>
-                                    {availableSizes.map(size => {
-                                        const sizeVariant = siblingVariants.find(p => p.size === size && p.color === selectedColor)
-                                            || siblingVariants.find(p => p.size === size);
+                                    {availableSizes.map(sizeObj => {
                                         return (
                                             <button
-                                                key={size}
-                                                onClick={() => handleSizeSelect(size)}
-                                                className={`py-2.5 border rounded-lg font-sans font-semibold text-sm transition-all ${selectedSize === size
+                                                key={sizeObj.size}
+                                                onClick={() => handleSizeSelect(sizeObj.size)}
+                                                className={`py-2.5 border rounded-lg font-sans font-semibold text-sm transition-all ${selectedSize === sizeObj.size
                                                         ? 'border-plum bg-plum/5 text-plum ring-1 ring-plum'
                                                         : 'border-gray-200 bg-white text-charcoal/70 hover:border-plum/50 hover:bg-gray-50'
                                                     }`}
                                             >
-                                                <span className="block">{size}</span>
-                                                {sizeVariant && (
-                                                    <span className="text-[10px] font-normal opacity-70">{formatPrice(sizeVariant.price)}</span>
-                                                )}
+                                                <span className="block">{sizeObj.size}</span>
+                                                <span className="text-[10px] font-normal opacity-70">{formatPrice(sizeObj.price)}</span>
                                             </button>
                                         );
                                     })}

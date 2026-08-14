@@ -41,15 +41,31 @@ export default function ProductList() {
 
   // Filter constants
   const SIZES = ['Small', 'Medium', 'Large', 'XL'];
-  const COLORS = useMemo(() => {
-    const colorsSet = new Set(items.map(item => item.color).filter(Boolean));
-    return Array.from(colorsSet).sort();
-  }, [items]);
+  const COLORS = ['Black', 'Blue', 'Brown', 'Green', 'Orange', 'Red', 'Yellow'];
 
   const COLOR_MAP = {
-    'Red': 'bg-red-500', 'Brown': 'bg-amber-800', 'Black': 'bg-black',
-    'Beige': 'bg-[#F5F5DC]', 'Blue': 'bg-blue-500',
-    'Orange': 'bg-orange-500', 'Green': 'bg-green-600', 'Yellow': 'bg-yellow-400'
+    'Black': 'bg-black',
+    'Blue': 'bg-blue-500',
+    'Brown': 'bg-amber-800',
+    'Green': 'bg-green-600',
+    'Orange': 'bg-orange-500',
+    'Red': 'bg-red-500',
+    'Yellow': 'bg-yellow-400'
+  };
+
+  const mapColorToFamily = (color) => {
+    if (!color) return [];
+    const c = color.toLowerCase();
+    
+    if (c.includes('black')) return ['Black'];
+    if (c.includes('blue') || c.includes('midnight bloom')) return ['Blue'];
+    if (c.includes('brown') || c.includes('desert khaki') || c.includes('natural sand')) return ['Brown'];
+    if (c.includes('red') || c.includes('rose') || c.includes('blush') || c.includes('floral carnival')) return ['Red'];
+    if (c.includes('orange')) return ['Orange'];
+    if (c.includes('green') || c.includes('ranger green') || c.includes('spring blossom')) return ['Green'];
+    if (c.includes('yellow')) return ['Yellow'];
+    
+    return [color]; // fallback
   };
 
   // Read category AND search from URL params whenever the URL changes
@@ -146,7 +162,10 @@ export default function ProductList() {
 
     // 3. Color
     if (selectedColors.length > 0) {
-      result = result.filter(p => selectedColors.includes(p.color));
+      result = result.filter(p => {
+        const families = mapColorToFamily(p.color);
+        return selectedColors.some(sc => families.includes(sc));
+      });
     }
 
     // 5. Rating

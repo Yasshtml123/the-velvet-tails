@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/config/firebase.js';
-import { collection, addDoc, getDocs, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { findProduct, PRODUCTS } from '@/data/products.js';
@@ -174,7 +174,8 @@ export default function ProductDetails() {
                 verified: true,
                 comment: reviewForm.text.trim(), // Storing as 'comment' per request
                 isUserSubmitted: true,
-                userId: user._id
+                userId: user._id,
+                timestamp: serverTimestamp()
             };
 
             const docRef = await addDoc(collection(db, 'reviews'), reviewData);

@@ -10,7 +10,14 @@ export const register = createAsyncThunk(
       // New flow: registration returns a message, not a user (requires email verification)
       return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.error || 'Registration failed');
+      // Prefer the exact string the backend sends, checking both common key names.
+      // Fall back to the raw JS error message (e.g. "Network Error") if no response.
+      const msg =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message ||
+        'Registration failed. Please try again.';
+      return rejectWithValue(msg);
     }
   }
 );

@@ -41,10 +41,15 @@ export default function ProductList() {
 
   // Filter constants
   const SIZES = ['Small', 'Medium', 'Large', 'XL'];
-  const COLORS = ['Red', 'Brown', 'Black', 'Purple', 'Beige', 'Blue'];
+  const COLORS = useMemo(() => {
+    const colorsSet = new Set(items.map(item => item.color).filter(Boolean));
+    return Array.from(colorsSet).sort();
+  }, [items]);
+
   const COLOR_MAP = {
     'Red': 'bg-red-500', 'Brown': 'bg-amber-800', 'Black': 'bg-black',
-    'Purple': 'bg-velvet-purple', 'Beige': 'bg-[#F5F5DC]', 'Blue': 'bg-blue-500'
+    'Beige': 'bg-[#F5F5DC]', 'Blue': 'bg-blue-500',
+    'Orange': 'bg-orange-500', 'Green': 'bg-green-600', 'Yellow': 'bg-yellow-400'
   };
 
   // Read category AND search from URL params whenever the URL changes

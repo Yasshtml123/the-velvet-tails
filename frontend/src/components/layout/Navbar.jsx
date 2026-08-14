@@ -152,9 +152,11 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = async () => {
-    await dispatch(logout());
-    navigate('/');
     setMobileMenuOpen(false);
+    await dispatch(logout());
+    // Hard redirect: forces a complete app reinitialisation so the navbar
+    // and all components start fresh with no stale authenticated state.
+    window.location.href = '/';
   };
 
   const handleSearchSubmit = (e) => {

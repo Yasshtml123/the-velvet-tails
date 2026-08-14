@@ -39,14 +39,20 @@ export const login = createAsyncThunk(
 export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
+    // Helper: wipe all auth-related storage unconditionally
+    const clearAllAuthStorage = () => {
+      localStorage.removeItem('token');        // legacy key guard
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      sessionStorage.clear();                  // belt-and-suspenders
+    };
+
     try {
-      await api.post('/auth/logout');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
-    } catch (error) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
-      return rejectWithValue(error.response?.data?.error || 'Logout failed');
+      await api.post('/auth/logout');          // clears HttpOnly refreshToken cookie
+    } catch (_err) {
+      // Swallow network errors — we still log out client-side
+    } finally {
+      clearAllAuthStorage();
     }
   }
 );
@@ -180,7 +186,19 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
-        localStorage.removeItem('user');
+        state.isInitialized = true;
+        state.error = null;
+        state.requiresVerification = false;
+        state.verificationEmail = '';
+        state.registrationSuccess = false;
+        state.registrationMessage = '';
+      })
+      .addCase(logout.rejected, (state) => {
+        // Even if the thunk errors, storage was already cleared — mirror state
+        state.user = null;
+        state.isAuthenticated = false;
+        state.isInitialized = true;
+        state.error = null;
       });
 
     // Get current user

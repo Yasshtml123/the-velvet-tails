@@ -20,6 +20,7 @@ import orderRoutes from './routes/orders.js';
 import paymentRoutes from './routes/payments.js';
 import adminRoutes from './routes/admin.js';
 import discountRoutes from './routes/discounts.js';
+import reviewRoutes from './routes/reviews.js';
 // Shiprocket tracking via cron job (jobs/shiprocketTrackingCron.js)
 import './jobs/shiprocketTrackingCron.js';
 import './cron.js';
@@ -167,6 +168,7 @@ app.use('/api/discounts', apiLimiter, discountRoutes); // Public discounts endpo
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminLimiter, adminRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.get('/api/ping', (req, res) => res.json({ ok: true, time: new Date() }));
 

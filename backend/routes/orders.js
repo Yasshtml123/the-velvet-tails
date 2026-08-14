@@ -1,4 +1,5 @@
 import express from 'express';
+import pool from '../config/db.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Product from '../models/Product.js';
@@ -175,6 +176,40 @@ router.post('/', authenticate, async (req, res) => {
       return res.status(400).json({ error: `Validation failed: ${messages.join(', ')}` });
     }
     res.status(500).json({ error: 'Failed to create order. Please try again.' });
+  }
+});
+
+// --- GET /api/orders/my-orders --- (requested explicit alias)
+router.get('/my-orders', authenticate, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Fetch orders for user
+    const [orders] = await pool.query('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+
+    // Format orders for the frontend
+    const formattedOrders = await Promise.all(orders.map(async (order) => {
+      // Fetch items for this order
+      const [items] = await pool.query('SELECT * FROM order_items WHERE order_id = ?', [order.id]);
+      
+      return {
+        _id: order.id.toString(),
+        amount: order.total_amount * 100, // Assuming MySQL stores in standard currency, convert to cents/paise for frontend logic
+        status: order.status.toLowerCase(),
+        createdAt: order.created_at,
+        items: items.map(item => ({
+          product: item.product_id,
+          quantity: item.quantity,
+          price: item.price * 100, // converting to cents
+          name: 'Product Details (MySQL)', // We don't have product details joined here, placeholder
+        }))
+      };
+    }));
+
+    res.json({ count: formattedOrders.length, orders: formattedOrders });
+  } catch (err) {
+    console.error('Get my orders error (MySQL):', err);
+    res.status(500).json({ error: 'Failed to fetch your orders from MySQL. Please try again.' });
   }
 });
 

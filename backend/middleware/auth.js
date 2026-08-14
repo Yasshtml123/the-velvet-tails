@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import pool from '../config/db.js';
 
 // Middleware to verify access token and attach user to request
 export const authenticate = async (req, res, next) => {
@@ -22,13 +22,22 @@ export const authenticate = async (req, res, next) => {
     
     try {
       const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-      const user = await User.findById(payload.id);
       
-      if (!user) {
+      const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [payload.id]);
+      
+      if (rows.length === 0) {
         return res.status(401).json({ error: 'User account no longer exists. Please login again.' });
       }
       
-      req.user = user;  // Attach user to request
+      const user = rows[0];
+      // Map MySQL id to _id so frontend compatibility is maintained in subsequent routes
+      req.user = {
+        _id: user.id.toString(),
+        name: user.name,
+        email: user.email,
+        role: 'user' // default role since schema lacks it
+      };
+      
       next();  // Continue to route handler
     } catch (err) {
       if (err.name === 'TokenExpiredError') {

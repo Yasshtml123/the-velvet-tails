@@ -1,23 +1,28 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '@/services/api.js';
+import { auth, db } from '@/config/firebase.js';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 // Async thunks
 export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      const { data } = await api.post('/auth/register', userData);
-      // New flow: registration returns a message, not a user (requires email verification)
-      return data;
+      const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+      
+      // Update profile with name
+      await updateProfile(userCredential.user, { displayName: userData.name });
+      
+      // Store user record in Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        name: userData.name,
+        email: userData.email,
+        createdAt: new Date().toISOString()
+      });
+      
+      return { message: 'Registration successful! You can now log in.' };
     } catch (error) {
-      // Prefer the exact string the backend sends, checking both common key names.
-      // Fall back to the raw JS error message (e.g. "Network Error") if no response.
-      const msg =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        error.message ||
-        'Registration failed. Please try again.';
-      return rejectWithValue(msg);
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -26,19 +31,22 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      const { data } = await api.post('/auth/login', credentials);
-      localStorage.setItem('accessToken', data.accessToken);
-      return data;
+      const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+      const user = userCredential.user;
+      
+      const userObj = {
+        _id: user.uid,
+        name: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        role: 'user'
+      };
+      
+      const token = await user.getIdToken();
+      localStorage.setItem('accessToken', token);
+      
+      return { user: userObj, accessToken: token };
     } catch (error) {
-      // Check if requires verification
-      if (error.response?.data?.requiresVerification) {
-        return rejectWithValue({
-          message: error.response.data.error,
-          requiresVerification: true,
-          email: error.response.data.email
-        });
-      }
-      return rejectWithValue(error.response?.data?.error || 'Login failed');
+      return rejectWithValue('Login failed: ' + error.message);
     }
   }
 );
@@ -46,20 +54,12 @@ export const login = createAsyncThunk(
 export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
-    // Helper: wipe all auth-related storage unconditionally
-    const clearAllAuthStorage = () => {
-      localStorage.removeItem('token');        // legacy key guard
+    try {
+      await signOut(auth);
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
-      sessionStorage.clear();                  // belt-and-suspenders
-    };
-
-    try {
-      await api.post('/auth/logout');          // clears HttpOnly refreshToken cookie
-    } catch (_err) {
-      // Swallow network errors — we still log out client-side
-    } finally {
-      clearAllAuthStorage();
+    } catch (error) {
+      return rejectWithValue(error.message);
     }
   }
 );

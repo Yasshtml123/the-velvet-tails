@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { db } from '@/config/firebase.js';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { findProduct, PRODUCTS } from '@/data/products.js';
@@ -80,31 +81,33 @@ export default function ProductDetails() {
     // Reviews state — must live here (before early return) to satisfy Rules of Hooks
     const [localReviews, setLocalReviews] = useState([]);
 
-    // ── Fetch reviews from Supabase on mount ──────────────────────────────────
+    // ── Fetch reviews from Firestore on mount ──────────────────────────────────
     useEffect(() => {
         if (!currentProduct?._id) return;
         const fetchReviews = async () => {
             setReviewsLoading(true);
-            const { data, error } = await supabase
-                .from('reviews')
-                .select('*')
-                .eq('product_id', currentProduct._id)
-                .order('created_at', { ascending: false });
-            if (!error && data) {
-                const getInitials = (name) => name?.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('') || '?';
-                setLocalReviews(data.map((r) => ({
-                    id: r.id,
-                    author: r.author_name,
-                    pet: r.pet_name || '—',
-                    avatar: getInitials(r.author_name),
-                    date: new Date(r.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-                    rating: r.rating,
-                    verified: false,
-                    text: r.comment,
-                    isUserSubmitted: false,
-                })));
+            try {
+                const q = query(
+                    collection(db, 'reviews'), 
+                    where('productId', '==', currentProduct._id)
+                );
+                const snapshot = await getDocs(q);
+                
+                const fetchedReviews = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    // Firestore timestamps need to be converted to readable date if necessary, 
+                    // or just rely on the stored date string
+                }));
+
+                // Sort descending by date (basic client side sort to avoid requiring composite indexes immediately)
+                fetchedReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+                setLocalReviews(fetchedReviews);
+            } catch (error) {
+                console.error("Failed to fetch reviews from Firestore:", error);
+            } finally {
+                setReviewsLoading(false);
             }
-            setReviewsLoading(false);
         };
         fetchReviews();
     }, [currentProduct?._id]);
@@ -142,47 +145,50 @@ export default function ProductDetails() {
         }, 300);
     };
 
-    // ── Submit review to Supabase ─────────────────────────────────────────────
+    // ── Submit review to Firestore ─────────────────────────────────────────────
     const handleReviewSubmit = async (e) => {
         e.preventDefault();
-        if (!reviewForm.name.trim() || !reviewForm.text.trim()) return;
-        setSubmitError(null);
-
-        const getInitials = (name) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('');
-
-        const { data, error } = await supabase
-            .from('reviews')
-            .insert([{
-                product_id: currentProduct._id,
-                author_name: reviewForm.name.trim(),
-                pet_name: reviewForm.pet?.trim() || null,
-                rating: reviewForm.rating,
-                comment: reviewForm.text.trim(),
-            }])
-            .select()
-            .single();
-
-        if (error) {
-            setSubmitError('Failed to submit your review. Please try again.');
+        
+        // Ensure user is logged in
+        if (!user) {
+            setSubmitError('You must be logged in to submit a review.');
             return;
         }
 
-        // Optimistically prepend the new review to local state
-        const optimisticReview = {
-            id: data.id,
-            author: data.author_name,
-            pet: data.pet_name || '—',
-            avatar: getInitials(data.author_name) || '?',
-            date: new Date(data.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-            rating: data.rating,
-            verified: false,
-            text: data.comment,
-            isUserSubmitted: true,
-        };
+        if (!reviewForm.text.trim()) return;
+        setSubmitError(null);
 
-        setLocalReviews((prev) => [optimisticReview, ...prev]);
-        setSubmitted(true);
-        setTimeout(() => closeForm(), 1400);
+        try {
+            const getInitials = (name) => name?.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('') || '?';
+            
+            const reviewData = {
+                productId: currentProduct._id,
+                author: user.name,
+                pet: reviewForm.pet?.trim() || '—',
+                avatar: getInitials(user.name),
+                date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                rating: Number(reviewForm.rating),
+                verified: true,
+                text: reviewForm.text.trim(),
+                isUserSubmitted: true,
+                userId: user._id
+            };
+
+            const docRef = await addDoc(collection(db, 'reviews'), reviewData);
+
+            // Optimistically update UI
+            setLocalReviews([{ id: docRef.id, ...reviewData }, ...localReviews]);
+            setSubmitted(true);
+            
+            // Auto close after 3s
+            setTimeout(() => {
+                closeForm();
+            }, 3000);
+
+        } catch (error) {
+            console.error('Review submit error:', error);
+            setSubmitError(error.response?.data?.message || 'Failed to submit your review. Please try again.');
+        }
     };
 
     const handleDeleteReview = (id) => {
@@ -757,20 +763,7 @@ export default function ProductDetails() {
                       ) : (
                         /* Form */
                         <form onSubmit={handleReviewSubmit} className="space-y-4" noValidate>
-                          {/* Name */}
-                          <div>
-                            <label className="block text-white/80 font-sans text-xs font-semibold uppercase tracking-widest mb-1.5">
-                              Your Name <span className="text-gold">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={reviewForm.name}
-                              onChange={(e) => setReviewForm({...reviewForm, name: e.target.value})}
-                              placeholder="e.g. Sarah Jenkins"
-                              required
-                              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-gold/60 focus:border-gold/50 transition-all"
-                            />
-                          </div>
+                          {/* Form Name field removed - Pulled from auth token */}
 
                           {/* Pet Details */}
                           <div>
@@ -828,7 +821,7 @@ export default function ProductDetails() {
                             </button>
                             <button
                               type="submit"
-                              disabled={!reviewForm.name.trim() || !reviewForm.text.trim()}
+                              disabled={!reviewForm.text.trim() || !user}
                               className="flex-1 py-3 bg-gold hover:bg-[#b89d5a] disabled:opacity-40 disabled:cursor-not-allowed text-plum font-sans font-bold text-sm rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] shadow-lg flex items-center justify-center gap-2"
                             >
                               <Send className="w-4 h-4" />

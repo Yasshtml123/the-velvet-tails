@@ -1,6 +1,6 @@
 import express from 'express';
 import User from '../models/User.js';
-import PendingRegistration from '../models/PendingRegistration.js';
+import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { authenticate } from '../middleware/auth.js';
@@ -32,8 +32,7 @@ const cookieOptions = () => {
 
 /**
  * POST /register
- * Creates a pending registration and sends verification email.
- * User is NOT added to DB until email is verified.
+ * Registers a user directly to MySQL.
  */
 router.post('/register', async (req, res) => {
   try {
@@ -51,57 +50,26 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (rows.length > 0) {
       return res.status(400).json({ error: 'An account with this email already exists. Please login.' });
-    }
-
-    // Check if pending registration exists
-    const existingPending = await PendingRegistration.findOne({ email });
-    if (existingPending) {
-      // Resend verification email
-      await sendVerificationEmail(email, name, existingPending.verificationToken);
-      return res.json({
-        message: 'Verification email resent. Please check your inbox.',
-        requiresVerification: true
-      });
     }
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Generate verification token
-    const verificationToken = PendingRegistration.generateToken();
-
-    // Create pending registration
-    await PendingRegistration.create({
-      name: name.trim(),
-      email,
-      passwordHash,
-      verificationToken
-    });
-
-    // Send verification email
-    await sendVerificationEmail(email, name, verificationToken);
+    // Create user in MySQL
+    await pool.query(
+      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+      [name.trim(), email, passwordHash]
+    );
 
     res.status(201).json({
-      message: 'Registration successful! Please check your email to verify your account.',
-      requiresVerification: true
+      message: 'Registration successful! You can now log in.',
+      requiresVerification: false
     });
   } catch (err) {
     console.error('Register error:', err);
-
-    // Handle MongoDB duplicate key error (race condition)
-    if (err.code === 11000) {
-      return res.status(400).json({ error: 'An account with this email already exists.' });
-    }
-
-    // Handle mongoose validation errors
-    if (err.name === 'ValidationError') {
-      const messages = Object.values(err.errors).map(e => e.message);
-      return res.status(400).json({ error: `Validation failed: ${messages.join(', ')}` });
-    }
-
     res.status(500).json({ error: 'Failed to create account. Please try again later.' });
   }
 });
@@ -208,22 +176,23 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    const user = await User.findOne({ email }).select('+passwordHash');
-    if (!user) {
-      // Check if there's a pending registration
-      const pending = await PendingRegistration.findOne({ email });
-      if (pending) {
-        return res.status(400).json({
-          error: 'Please verify your email first. Check your inbox for the verification link.',
-          requiresVerification: true,
-          email: email
-        });
-      }
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (rows.length === 0) {
       return res.status(400).json({ error: 'Email not found' });
     }
 
-    const ok = await user.comparePassword(password);
+    const userRow = rows[0];
+
+    const ok = await bcrypt.compare(password, userRow.password);
     if (!ok) return res.status(400).json({ error: 'Invalid password' });
+
+    // Map MySQL id to _id so frontend Redux state doesn't break
+    const user = {
+      _id: userRow.id.toString(), // Needs to be string for Redux consistency
+      name: userRow.name,
+      email: userRow.email,
+      role: 'user' // Default to user since MySQL schema doesn't have role
+    };
 
     const access = signAccess({ id: user._id });
     const refresh = signRefresh({ id: user._id });

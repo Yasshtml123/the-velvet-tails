@@ -1,29 +1,50 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { db } from '@/config/firebase.js';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import api from '@/services/api.js';
 
 // Async thunks
 export const createOrder = createAsyncThunk(
     'orders/create',
-    async (orderData, { rejectWithValue }) => {
+    async (orderData, { getState, rejectWithValue }) => {
         try {
-            const { data } = await api.post('/orders', orderData);
-            return data;
+            const { auth } = getState();
+            if (!auth.user) throw new Error("Must be logged in to order");
+            
+            const docRef = await addDoc(collection(db, 'orders'), {
+                ...orderData,
+                userId: auth.user._id,
+                createdAt: new Date().toISOString()
+            });
+            
+            return { order: { id: docRef.id, ...orderData } };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.error || 'Failed to create order');
+            return rejectWithValue(error.message || 'Failed to create order');
         }
     }
 );
 
 export const fetchOrders = createAsyncThunk(
     'orders/fetchAll',
-    async (status = null, { rejectWithValue }) => {
+    async (status = null, { getState, rejectWithValue }) => {
         try {
-            const url = status ? `/orders?status=${status}` : '/orders';
-            // Note: api.js interceptor automatically attaches the Bearer token
-            const { data } = await api.get(url);
-            return data.orders || [];
+            const { auth } = getState();
+            if (!auth.user) return [];
+            
+            // Query firestore where userId matches
+            const q = query(collection(db, 'orders'), where("userId", "==", auth.user._id));
+            const snapshot = await getDocs(q);
+            
+            const orders = snapshot.docs.map(doc => ({
+                _id: doc.id,
+                ...doc.data()
+            }));
+            
+            // Sort by createdAt descending
+            orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            return orders;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.error || 'Failed to fetch orders');
+            return rejectWithValue(error.message || 'Failed to fetch orders');
         }
     }
 );

@@ -95,9 +95,13 @@ const buildAllowedOrigins = () => {
   origins.add('http://localhost:5174');
   origins.add('http://localhost:3000');
 
+  // Hardcoded production domain — fallback if FRONTEND_URL env var is not set
+  origins.add('https://thevelvettails.com');
+  origins.add('https://www.thevelvettails.com');
+
   if (FRONT) {
     origins.add(FRONT);
-    // Also allow www <-> non-www sibling
+    // Also allow www <-> non-www sibling of whatever FRONTEND_URL is set to
     try {
       const u = new URL(FRONT);
       if (u.hostname.startsWith('www.')) {
@@ -115,23 +119,27 @@ const allowedOrigins = buildAllowedOrigins();
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow server-to-server (no origin header) and known origins
+    // Allow server-to-server requests (no Origin header, e.g. curl, mobile apps)
+    // and any explicitly allowed browser origin.
+    // IMPORTANT: use callback(null, false) NOT callback(new Error(...)) for blocked
+    // origins — throwing into the callback propagates to express-async-errors and
+    // causes a 405 instead of a proper CORS rejection.
     if (!origin || allowedOrigins.has(origin)) {
       callback(null, true);
     } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      callback(new Error(`CORS policy: origin ${origin} is not allowed`));
+      console.warn(`[CORS] Blocked origin: ${origin}`);
+      callback(null, false);  // ← false, not new Error() — keeps Express happy
     }
   },
   credentials: true,
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['X-Request-ID'],
-  optionsSuccessStatus: 200  // IE11 compatibility
+  optionsSuccessStatus: 200  // IE11 / older browser compatibility
 };
 
 app.use(cors(corsOptions));
-// Explicitly handle OPTIONS preflight for all routes
+// Explicitly handle OPTIONS preflight for every route before any other middleware
 app.options('*', cors(corsOptions));
 
 

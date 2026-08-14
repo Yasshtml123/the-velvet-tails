@@ -36,16 +36,38 @@ export default function Register() {
     setValidationError('');
   };
 
+  // ── Validation ─────────────────────────────────────────────────────────────
+  // Must have at least one letter, one digit, and one underscore
+  const PASSWORD_REGEX = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*_).+$/;
+
+  const validatePassword = (pw) => {
+    if (pw.length < 6) return 'Password must be at least 6 characters';
+    if (!PASSWORD_REGEX.test(pw))
+      return 'Password must include at least one letter, one number, and one underscore (_)';
+    return null;
+  };
+
+  // Live requirement checks (drives the checklist UI)
+  const pwChecks = {
+    length:      formData.password.length >= 6,
+    hasLetter:   /[a-zA-Z]/.test(formData.password),
+    hasNumber:   /[0-9]/.test(formData.password),
+    hasUnderscore: /[_]/.test(formData.password),
+    matches:     formData.confirmPassword.length > 0 &&
+                 formData.password === formData.confirmPassword,
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      setValidationError('Passwords do not match');
+    const pwError = validatePassword(formData.password);
+    if (pwError) {
+      setValidationError(pwError);
       return;
     }
 
-    if (formData.password.length < 6) {
-      setValidationError('Password must be at least 6 characters');
+    if (formData.password !== formData.confirmPassword) {
+      setValidationError('Passwords do not match');
       return;
     }
 
@@ -196,7 +218,7 @@ export default function Register() {
                     value={formData.password}
                     onChange={handleChange}
                     className="block w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-velvet-purple focus:border-transparent transition-all"
-                    placeholder="Minimum 6 characters"
+                    placeholder="e.g. MyPet_123"
                   />
                   <button
                     type="button"
@@ -215,6 +237,39 @@ export default function Register() {
                     )}
                   </button>
                 </div>
+
+                {/* Live password requirements checklist */}
+                {formData.password.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {[
+                      { ok: pwChecks.length,       label: 'At least 6 characters' },
+                      { ok: pwChecks.hasLetter,    label: 'Contains a letter (a–z, A–Z)' },
+                      { ok: pwChecks.hasNumber,    label: 'Contains a number (0–9)' },
+                      { ok: pwChecks.hasUnderscore,label: 'Contains an underscore (_)' },
+                    ].map(({ ok, label }) => (
+                      <li key={label} className={`flex items-center gap-1.5 text-xs transition-colors ${
+                        ok ? 'text-green-600' : 'text-gray-400'
+                      }`}>
+                        {ok ? (
+                          <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3a1 1 0 000 1.414l2 2a1 1 0 001.414-1.414L11 9.586V7z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {/* Static hint when field is empty */}
+                {formData.password.length === 0 && (
+                  <p className="mt-1.5 text-xs text-gray-400">
+                    Must include letters, numbers, and an underscore (_)
+                  </p>
+                )}
               </div>
 
               {/* Confirm Password Field */}
@@ -231,7 +286,13 @@ export default function Register() {
                     required
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="block w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-velvet-purple focus:border-transparent transition-all"
+                    className={`block w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                      formData.confirmPassword.length === 0
+                        ? 'border-gray-300 focus:ring-velvet-purple'
+                        : pwChecks.matches
+                        ? 'border-green-400 focus:ring-green-400'
+                        : 'border-red-400 focus:ring-red-400'
+                    }`}
                     placeholder="Confirm your password"
                   />
                   <button
@@ -251,6 +312,28 @@ export default function Register() {
                     )}
                   </button>
                 </div>
+                {/* Live match feedback */}
+                {formData.confirmPassword.length > 0 && (
+                  <p className={`mt-1.5 text-xs flex items-center gap-1 ${
+                    pwChecks.matches ? 'text-green-600' : 'text-red-500'
+                  }`}>
+                    {pwChecks.matches ? (
+                      <>
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Passwords match
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        Passwords do not match
+                      </>
+                    )}
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}

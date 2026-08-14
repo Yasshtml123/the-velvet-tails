@@ -171,18 +171,31 @@ app.use('/api/admin', adminLimiter, adminRoutes);
 app.get('/api/ping', (req, res) => res.json({ ok: true, time: new Date() }));
 
 app.get('/api/health', async (req, res) => {
+  // Check which critical env vars are missing (report keys only, never values)
+  const requiredVars = [
+    'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET',
+    'MONGO_URI', 'FRONTEND_URL', 'BACKEND_URL',
+    'EMAIL_USER', 'EMAIL_PASS',
+  ];
+  const missingVars = requiredVars.filter(v => !process.env[v]);
+
   const checks = {
     mongodb: mongoose.connection.readyState === 1,
+    jwtSecrets: !!process.env.JWT_ACCESS_SECRET && !!process.env.JWT_REFRESH_SECRET,
+    email: !!process.env.EMAIL_USER && !!process.env.EMAIL_PASS,
   };
 
-  const allHealthy = Object.values(checks).every(v => v === true);
+  const allHealthy = Object.values(checks).every(v => v === true) && missingVars.length === 0;
 
   const health = {
     status: allHealthy ? 'OK' : 'DEGRADED',
     timestamp: new Date(),
     uptime: process.uptime(),
-    mongodb: checks.mongodb ? 'connected' : 'disconnected',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || '⚠ NOT SET (defaults to development)',
+    mongodb: checks.mongodb ? 'connected' : '❌ disconnected',
+    jwtSecrets: checks.jwtSecrets ? 'set' : '❌ missing — server will crash on auth routes',
+    email: checks.email ? 'configured' : '⚠ not configured — email verification will fail',
+    ...(missingVars.length > 0 && { missingEnvVars: missingVars }),
   };
 
   res.status(allHealthy ? 200 : 503).json(health);

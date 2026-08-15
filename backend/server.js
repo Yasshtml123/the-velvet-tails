@@ -99,6 +99,7 @@ const buildAllowedOrigins = () => {
   // Hardcoded production domain — fallback if FRONTEND_URL env var is not set
   origins.add('https://thevelvettails.com');
   origins.add('https://www.thevelvettails.com');
+  origins.add('https://the-velvet-tails-8l1t.vercel.app'); // Current Vercel deployment
 
   if (FRONT) {
     origins.add(FRONT);
@@ -111,6 +112,12 @@ const buildAllowedOrigins = () => {
         origins.add(`${u.protocol}//www.${u.hostname}${u.port ? ':' + u.port : ''}`);
       }
     } catch (_) { /* ignore malformed URL */ }
+  }
+
+  // Allow additional origins via environment variable (comma-separated)
+  if (process.env.ALLOWED_ORIGINS) {
+    const customOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+    customOrigins.forEach(o => origins.add(o));
   }
 
   return origins;

@@ -1,28 +1,22 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { auth, db } from '@/config/firebase.js';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import api from '@/services/api.js';
 
-// Async thunks
+// ── Async Thunks ──────────────────────────────────────────────────────────────
+
 export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
-      
-      // Update profile with name
-      await updateProfile(userCredential.user, { displayName: userData.name });
-      
-      // Store user record in Firestore
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
+      const { data } = await api.post('/auth/register', {
         name: userData.name,
         email: userData.email,
-        createdAt: new Date().toISOString()
+        password: userData.password
       });
-      
-      return { message: 'Registration successful! You can now log in.' };
+      return data; // { message, requiresVerification }
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(
+        error.response?.data?.error || error.message || 'Registration failed'
+      );
     }
   }
 );
@@ -31,22 +25,30 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-      const user = userCredential.user;
-      
-      const userObj = {
-        _id: user.uid,
-        name: user.displayName || user.email.split('@')[0],
-        email: user.email,
-        role: 'user'
-      };
-      
-      const token = await user.getIdToken();
-      localStorage.setItem('accessToken', token);
-      
-      return { user: userObj, accessToken: token };
+      const { data } = await api.post('/auth/login', {
+        email: credentials.email,
+        password: credentials.password
+      });
+      // data = { user: { _id, name, email, role }, accessToken }
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+      return data;
     } catch (error) {
-      return rejectWithValue('Login failed: ' + error.message);
+      const payload = error.response?.data;
+      if (payload?.requiresVerification) {
+        return rejectWithValue({
+          message: payload.error,
+          requiresVerification: true,
+          email: credentials.email
+        });
+      }
+      return rejectWithValue(
+        payload?.error || error.message || 'Login failed'
+      );
     }
   }
 );
@@ -55,11 +57,12 @@ export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
-      await signOut(auth);
+      await api.post('/auth/logout');
+    } catch (_err) {
+      // Even on network error, clear local state
+    } finally {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
-    } catch (error) {
-      return rejectWithValue(error.message);
     }
   }
 );
@@ -88,6 +91,8 @@ export const resendVerification = createAsyncThunk(
   }
 );
 
+// ── Initial State ─────────────────────────────────────────────────────────────
+
 const initialState = {
   user: JSON.parse(localStorage.getItem('user')) || null,
   isAuthenticated: !!localStorage.getItem('accessToken'),
@@ -100,6 +105,8 @@ const initialState = {
   requiresVerification: false,
   verificationEmail: ''
 };
+
+// ── Slice ─────────────────────────────────────────────────────────────────────
 
 const authSlice = createSlice({
   name: 'auth',
@@ -140,20 +147,17 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
-        // New: registration requires verification
         if (action.payload.requiresVerification) {
           state.registrationSuccess = true;
           state.registrationMessage = action.payload.message;
           state.isAuthenticated = false;
           state.user = null;
         } else {
-          // Direct login (for backward compatibility)
-          state.isAuthenticated = true;
-          state.user = action.payload.user;
-          state.isInitialized = true;
-          if (action.payload.user) {
-            localStorage.setItem('user', JSON.stringify(action.payload.user));
-          }
+          // Direct registration — user must still log in
+          state.registrationSuccess = true;
+          state.registrationMessage = action.payload.message || 'Registration successful! You can now log in.';
+          state.isAuthenticated = false;
+          state.user = null;
         }
       })
       .addCase(register.rejected, (state, action) => {

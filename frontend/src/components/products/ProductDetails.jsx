@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db } from '@/config/firebase.js';
-import { collection, addDoc, getDocs, query, where, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import api from '@/services/api.js';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { findProduct, PRODUCTS } from '@/data/products.js';
@@ -81,38 +80,21 @@ export default function ProductDetails() {
     // Reviews state — must live here (before early return) to satisfy Rules of Hooks
     const [localReviews, setLocalReviews] = useState([]);
 
-    // ── Fetch reviews from Firestore on mount ──────────────────────────────────
+    // ── Fetch reviews from Express API on mount ───────────────────────────────
     useEffect(() => {
         if (!currentProduct?._id) return;
-        
+
         setReviewsLoading(true);
-        const q = query(
-            collection(db, 'reviews'), 
-            where('productId', '==', currentProduct._id)
-        );
-
-        // Use onSnapshot for realtime persistent loading
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedReviews = snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data,
-                    // Map the requested 'comment' field to the UI's 'text' expectation
-                    text: data.comment || data.text,
-                };
+        api.get(`/reviews/product/${currentProduct._id}`)
+            .then(({ data }) => {
+                setLocalReviews(data.reviews || []);
+            })
+            .catch((err) => {
+                console.error('Failed to fetch reviews:', err);
+            })
+            .finally(() => {
+                setReviewsLoading(false);
             });
-
-            // Sort descending by date
-            fetchedReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-            setLocalReviews(fetchedReviews);
-            setReviewsLoading(false);
-        }, (error) => {
-            console.error("Failed to fetch reviews from Firestore:", error);
-            setReviewsLoading(false);
-        });
-
-        return () => unsubscribe();
     }, [currentProduct?._id]);
 
     // ── Handler functions ────────────────────────────────────────────────────
@@ -148,10 +130,10 @@ export default function ProductDetails() {
         }, 300);
     };
 
-    // ── Submit review to Firestore ─────────────────────────────────────────────
+    // ── Submit review to MongoDB via Express API ───────────────────────────────
     const handleReviewSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Ensure user is logged in
         if (!user) {
             setSubmitError('You must be logged in to submit a review.');
@@ -162,28 +144,17 @@ export default function ProductDetails() {
         setSubmitError(null);
 
         try {
-            const getInitials = (name) => name?.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('') || '?';
-            
-            const reviewData = {
+            const { data } = await api.post('/reviews', {
                 productId: currentProduct._id,
-                author: user.name,
-                pet: reviewForm.pet?.trim() || '—',
-                avatar: getInitials(user.name),
-                date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
                 rating: Number(reviewForm.rating),
-                verified: true,
-                comment: reviewForm.text.trim(), // Storing as 'comment' per request
-                isUserSubmitted: true,
-                userId: user._id,
-                timestamp: serverTimestamp()
-            };
+                comment: reviewForm.text.trim(),
+                petName: reviewForm.pet?.trim() || ''
+            });
 
-            const docRef = await addDoc(collection(db, 'reviews'), reviewData);
-
-            // Optimistically update UI
-            setLocalReviews([{ id: docRef.id, ...reviewData }, ...localReviews]);
+            // Prepend the returned review to the list
+            setLocalReviews([data.review, ...localReviews]);
             setSubmitted(true);
-            
+
             // Auto close after 3s
             setTimeout(() => {
                 closeForm();

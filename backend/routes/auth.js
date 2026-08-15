@@ -1,6 +1,6 @@
 import express from 'express';
 import User from '../models/User.js';
-import pool from '../config/db.js';
+import PendingRegistration from '../models/PendingRegistration.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { authenticate } from '../middleware/auth.js';
@@ -32,7 +32,7 @@ const cookieOptions = () => {
 
 /**
  * POST /register
- * Registers a user directly to MySQL.
+ * Registers a user directly to MongoDB.
  */
 router.post('/register', async (req, res) => {
   try {
@@ -50,19 +50,20 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user already exists
-    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (rows.length > 0) {
+    const existing = await User.findOne({ email: email.toLowerCase().trim() }).lean();
+    if (existing) {
       return res.status(400).json({ error: 'An account with this email already exists. Please login.' });
     }
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user in MySQL
-    await pool.query(
-      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-      [name.trim(), email, passwordHash]
-    );
+    // Create user in MongoDB
+    await User.create({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      passwordHash
+    });
 
     res.status(201).json({
       message: 'Registration successful! You can now log in.',
@@ -70,6 +71,9 @@ router.post('/register', async (req, res) => {
     });
   } catch (err) {
     console.error('Register error:', err);
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'An account with this email already exists. Please login.' });
+    }
     res.status(500).json({ error: 'Failed to create account. Please try again later.' });
   }
 });
@@ -176,22 +180,20 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (rows.length === 0) {
+    // Find user and include passwordHash field (select: false by default)
+    const userDoc = await User.findOne({ email: email.toLowerCase().trim() }).select('+passwordHash');
+    if (!userDoc) {
       return res.status(400).json({ error: 'Email not found' });
     }
 
-    const userRow = rows[0];
-
-    const ok = await bcrypt.compare(password, userRow.password);
+    const ok = await bcrypt.compare(password, userDoc.passwordHash);
     if (!ok) return res.status(400).json({ error: 'Invalid password' });
 
-    // Map MySQL id to _id so frontend Redux state doesn't break
     const user = {
-      _id: userRow.id.toString(), // Needs to be string for Redux consistency
-      name: userRow.name,
-      email: userRow.email,
-      role: 'user' // Default to user since MySQL schema doesn't have role
+      _id: userDoc._id.toString(),
+      name: userDoc.name,
+      email: userDoc.email,
+      role: userDoc.role || 'user'
     };
 
     const access = signAccess({ id: user._id });

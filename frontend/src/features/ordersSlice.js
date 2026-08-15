@@ -1,25 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { db } from '@/config/firebase.js';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import api from '@/services/api.js';
 
-// Async thunks
+// ── Async Thunks ──────────────────────────────────────────────────────────────
+
 export const createOrder = createAsyncThunk(
     'orders/create',
     async (orderData, { getState, rejectWithValue }) => {
         try {
             const { auth } = getState();
-            if (!auth.user) throw new Error("Must be logged in to order");
-            
-            const docRef = await addDoc(collection(db, 'orders'), {
-                ...orderData,
-                userId: auth.user._id,
-                createdAt: new Date().toISOString()
-            });
-            
-            return { order: { id: docRef.id, ...orderData } };
+            if (!auth.user) throw new Error('Must be logged in to order');
+
+            const { data } = await api.post('/orders', orderData);
+            return data; // { order, breakdown }
         } catch (error) {
-            return rejectWithValue(error.message || 'Failed to create order');
+            return rejectWithValue(error.response?.data?.error || error.message || 'Failed to create order');
         }
     }
 );
@@ -30,21 +24,12 @@ export const fetchOrders = createAsyncThunk(
         try {
             const { auth } = getState();
             if (!auth.user) return [];
-            
-            // Query firestore where userId matches
-            const q = query(collection(db, 'orders'), where("userId", "==", auth.user._id));
-            const snapshot = await getDocs(q);
-            
-            const orders = snapshot.docs.map(doc => ({
-                _id: doc.id,
-                ...doc.data()
-            }));
-            
-            // Sort by createdAt descending
-            orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            return orders;
+
+            const url = status ? `/orders/my-orders?status=${status}` : '/orders/my-orders';
+            const { data } = await api.get(url);
+            return data.orders || [];
         } catch (error) {
-            return rejectWithValue(error.message || 'Failed to fetch orders');
+            return rejectWithValue(error.response?.data?.error || error.message || 'Failed to fetch orders');
         }
     }
 );
@@ -73,6 +58,8 @@ export const cancelOrder = createAsyncThunk(
     }
 );
 
+// ── Slice ─────────────────────────────────────────────────────────────────────
+
 const ordersSlice = createSlice({
     name: 'orders',
     initialState: {
@@ -99,7 +86,9 @@ const ordersSlice = createSlice({
             .addCase(createOrder.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.currentOrder = action.payload.order;
-                state.orders.unshift(action.payload.order);
+                if (action.payload.order) {
+                    state.orders.unshift(action.payload.order);
+                }
             })
             .addCase(createOrder.rejected, (state, action) => {
                 state.isLoading = false;
